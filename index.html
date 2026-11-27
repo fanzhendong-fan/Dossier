@@ -12,7 +12,7 @@
     --card:#251E17;
     --ink:#F1E7D7;
     --ink-2:#BEAD98;
-    --ink-3:#8B7B68;
+    --ink-3:#9A8874;
     --line:rgba(241,231,215,.13);
     --line-soft:rgba(241,231,215,.07);
     --accent:#D99A5B;
@@ -73,6 +73,7 @@
   }
   .pill.mode .dot{width:6px;height:6px;border-radius:50%;background:var(--sage)}
   .pill.mode.int{color:var(--accent)}
+  .pill:disabled{opacity:.5;cursor:default}
   .pill.mode.int .dot{background:var(--accent)}
   .pill.mode.int .dot{animation:dotPulse 2.6s ease-in-out infinite}
   @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(217,154,91,.45)}50%{box-shadow:0 0 0 5px rgba(217,154,91,0)}}
@@ -105,18 +106,15 @@
   .btn.primary{background:var(--accent);border-color:var(--accent);color:#1C130B;font-weight:500}
   .btn.primary:hover{background:#E9AE70;border-color:#E9AE70;color:#1C130B}
 
-  /* ---------- workspace ---------- */
-  .workspace{
-    flex:1 1 auto;min-height:0;display:grid;
-    grid-template-columns:minmax(0,1fr) 410px;gap:16px;
-    padding:2px 22px 16px;
-  }
-  .stage-col{min-height:0;display:flex;align-items:center;justify-content:center}
+  /* ---------- letterbox stage ---------- */
+  .workspace{flex:1 1 auto;min-height:0;position:relative}
+  .stage-col{position:absolute;inset:0}
   .frame{
-    position:relative;overflow:hidden;border-radius:16px;
-    background:#0A0806;border:1px solid rgba(241,231,215,.11);
-    box-shadow:var(--shadow);isolation:isolate;
-    width:100%;height:100%;
+    --page-h:clamp(210px,36vh,380px);
+    --strip-h:44px;
+    position:relative;overflow:hidden;border-radius:0;
+    background:#0A0806;border:0;box-shadow:none;
+    isolation:isolate;width:100%;height:100%;
   }
   .scene-layer{
     position:absolute;inset:-22px;will-change:transform;
@@ -160,14 +158,19 @@
     100%{transform:translate3d(18px,-130px,0);opacity:0}
   }
 
+  /* legibility scrim: the bottom band has to hold prose over bright daylight art */
   .frame::after{
-    content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:4;
     background:
-      linear-gradient(to top,rgba(10,7,5,.55),rgba(10,7,5,0) 26%),
-      radial-gradient(120% 100% at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.35));
+      linear-gradient(to top,rgba(8,6,4,.94) 0%,rgba(8,6,4,.74) 24%,rgba(8,6,4,.22) 52%,rgba(8,6,4,0) 72%),
+      linear-gradient(to bottom,rgba(8,6,4,.55),rgba(8,6,4,0) 18%),
+      radial-gradient(120% 100% at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.38));
   }
+  /* characters stand in the band above the page, so the reading panel never
+     crops a bust */
   .actors{
-    position:absolute;inset:0;pointer-events:none;z-index:3;
+    position:absolute;top:0;left:0;right:0;pointer-events:none;z-index:3;
+    bottom:calc(var(--page-h) + var(--strip-h) + 14px);
     transform:translate3d(calc(var(--px,0px) * .4),calc(var(--py,0px) * .4),0);
   }
   .actor{
@@ -199,7 +202,7 @@
 
   /* ---------- scene cut ---------- */
   .cut-wash{
-    position:absolute;inset:0;z-index:7;pointer-events:none;
+    position:absolute;inset:0;z-index:9;pointer-events:none;
     background:#0A0806;opacity:0;transition:opacity .16s ease;
     display:flex;align-items:center;justify-content:center;
   }
@@ -213,8 +216,8 @@
 
   /* ---------- speaker plate ---------- */
   .speaker{
-    position:absolute;right:12px;bottom:12px;z-index:5;
-    display:none;align-items:center;gap:9px;max-width:min(62%,310px);
+    position:absolute;right:14px;top:52px;z-index:7;
+    display:none;align-items:center;gap:9px;max-width:min(52%,300px);
     padding:7px 13px 7px 7px;border-radius:999px;
     background:rgba(18,13,9,.74);border:1px solid rgba(241,231,215,.2);
     backdrop-filter:blur(9px);
@@ -237,15 +240,9 @@
   @keyframes actorFade{from{opacity:0}to{opacity:1}}
   @keyframes actorSway{0%,100%{transform:rotate(-.45deg)}50%{transform:rotate(.45deg)}}
   @keyframes actorBreathe{0%,100%{translate:0 0}50%{translate:0 -4px}}
-  .plate-cap{
-    position:absolute;left:14px;bottom:12px;z-index:4;
-    font-size:11.5px;color:#F3E9D9;letter-spacing:.03em;
-    background:rgba(18,13,9,.6);border:1px solid rgba(241,231,215,.18);
-    backdrop-filter:blur(8px);border-radius:999px;padding:6px 13px;
-  }
   .inview{
-    position:absolute;right:12px;top:12px;z-index:4;
-    display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:70%;
+    position:absolute;left:14px;top:12px;z-index:7;
+    display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;max-width:54%;
   }
   .ichip{
     font-size:11px;color:#EEE2D1;background:rgba(18,13,9,.66);
@@ -253,16 +250,38 @@
     backdrop-filter:blur(6px);
   }
 
-  /* ---------- side panel ---------- */
-  .panel{
-    min-height:0;display:flex;flex-direction:column;
-    background:linear-gradient(180deg,#211A14,#191410 60%);
-    border:1px solid var(--line-soft);border-radius:16px;
-    box-shadow:var(--shadow);overflow:hidden;
+  /* ---------- the page, docked over the art ---------- */
+  .page{
+    position:absolute;left:50%;transform:translateX(-50%);z-index:5;
+    bottom:calc(var(--strip-h) + 10px);height:var(--page-h);
+    width:min(880px,calc(100% - 32px));
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,rgba(28,22,16,.9),rgba(17,13,9,.97));
+    border:1px solid rgba(241,231,215,.15);border-radius:14px;
+    box-shadow:0 26px 64px rgba(0,0,0,.62);
+    backdrop-filter:blur(11px);overflow:hidden;
+  }
+  .page-head{
+    flex:0 0 auto;display:flex;align-items:baseline;gap:10px;
+    padding:8px 18px;border-bottom:1px solid var(--line-soft);
+    font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .page-head b{
+    font-family:var(--serif);font-weight:400;font-size:12.5px;
+    letter-spacing:.02em;text-transform:none;color:var(--ink-2);
+  }
+  .page-head .pg-clock{
+    margin-left:auto;font-family:var(--mono);font-style:normal;
+    letter-spacing:.04em;color:var(--accent);
   }
   .feed{
-    flex:1 1 auto;min-height:140px;overflow-y:auto;padding:12px 16px 8px;
+    flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 26px 8px;
     mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 100%);
+  }
+  /* the reading band is short now, so a beat often continues under the fold:
+     fade the bottom edge instead of slicing a line in half */
+  .feed.more{
+    mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 24px),transparent);
   }
   .turn{padding:0 0 12px}
   .turn + .turn{border-top:1px solid var(--line-soft);padding-top:12px}
@@ -276,10 +295,11 @@
     color:var(--ink-3);margin-bottom:8px;
   }
   .tmeta em{font-style:normal;color:var(--accent)}
+  .turn.err .scene{color:#DCA791}
   .tact{font-size:12px;font-style:italic;color:var(--ink-2);margin-bottom:8px}
   .tact i{font-style:normal;color:var(--accent);margin-right:6px}
   .scene{
-    font-family:var(--serif);font-size:14px;line-height:1.58;color:var(--ink);
+    font-family:var(--serif);font-size:14.5px;line-height:1.62;color:var(--ink);
     margin:0;
   }
   .scene p{margin:0 0 7px}
@@ -288,6 +308,42 @@
     margin:8px 0 0;padding:1px 0 1px 10px;
     border-left:2px solid rgba(217,154,91,.5);
   }
+  .dialogue{margin:10px 0 0;display:flex;flex-direction:column;gap:5px}
+  .dlg{
+    display:flex;flex-direction:column;gap:2px;
+    padding:6px 11px;border-radius:9px;
+    background:rgba(217,154,91,.075);
+    border:1px solid rgba(217,154,91,.2);
+    border-left:2px solid rgba(217,154,91,.55);
+  }
+  .dlg-who{
+    font-family:var(--sans);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);
+  }
+  .dlg-line{font-family:var(--serif);font-size:13.5px;line-height:1.5;color:var(--ink)}
+
+  /* ---------- the exchange: speech sits on the stage, not in the page ---------- */
+  .exchange{display:contents}
+  #exchangeLines{display:none}
+  .bub{
+    align-self:flex-start;max-width:88%;
+    padding:7px 12px;border-radius:11px;
+    font-family:var(--serif);font-size:13px;line-height:1.45;color:var(--ink);
+    background:rgba(28,20,13,.86);border:1px solid rgba(217,154,91,.3);
+    border-left:2px solid rgba(217,154,91,.62);
+    box-shadow:0 10px 26px rgba(0,0,0,.45);backdrop-filter:blur(6px);
+    animation:paraIn .4s ease both;
+  }
+  .bub-who{
+    display:block;font-family:var(--sans);font-size:8.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:2px;
+  }
+  .bub.you{
+    align-self:flex-end;text-align:right;font-style:italic;color:var(--ink-2);
+    background:rgba(20,17,13,.82);border-color:var(--line-soft);
+    border-left:1px solid var(--line-soft);border-right:2px solid rgba(241,231,215,.28);
+  }
+  .bub.you .bub-who{color:var(--ink-3)}
   .thoughts p{
     margin:0;font-family:var(--serif);font-style:italic;font-size:13px;
     line-height:1.5;color:var(--ink-2);
@@ -323,21 +379,33 @@
     font-family:var(--serif);font-style:italic;font-size:13px;
     color:var(--ink-3);margin:0;
   }
+  .day-slug{
+    font-family:var(--serif);font-size:13.5px;line-height:1.68;color:var(--ink);
+    margin:0 0 14px;
+  }
+  .day-slug b{font-weight:400;color:var(--accent)}
+  .day-line{
+    display:flex;align-items:center;gap:9px;margin:15px 0 12px;
+    font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .day-line::after{content:'';flex:1 1 auto;height:1px;background:var(--line-soft)}
 
-  .dock{flex:0 0 auto;padding:0 12px 11px;border-top:1px solid var(--line-soft)}
+  .dock{flex:0 0 auto;padding:0 12px 8px;border-top:1px solid var(--line-soft)}
   .dock-status{
-    min-height:12px;text-align:right;padding:5px 2px 3px;
+    min-height:11px;text-align:right;padding:4px 2px 2px;
     font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
   }
   .dock-status.err{color:#E58A77}
   .dock-status.busy{animation:statusPulse 1.6s ease-in-out infinite}
   @keyframes statusPulse{0%,100%{opacity:.45}50%{opacity:1}}
-  .choices{display:grid;grid-template-columns:1fr;gap:5px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .choices .choice:last-child:nth-child(odd){grid-column:1 / -1}
+  .choices .choice.end{grid-column:1 / -1}
   .choice{
-    display:flex;align-items:center;gap:10px;
+    display:flex;align-items:center;gap:8px;
     background:rgba(241,231,215,.035);border:1px solid var(--line-soft);border-radius:9px;
-    padding:7px 11px;text-align:left;cursor:pointer;
-    font-family:var(--serif);font-size:13px;line-height:1.32;color:var(--ink);
+    padding:5px 10px;text-align:left;cursor:pointer;
+    font-family:var(--serif);font-size:12.5px;line-height:1.3;color:var(--ink);
     transition:background .15s,border-color .15s,transform .15s;
   }
   .choice:hover{background:rgba(217,154,91,.1);border-color:rgba(217,154,91,.45);transform:translateY(-1px)}
@@ -349,10 +417,17 @@
     font-family:var(--sans);font-size:10px;color:var(--ink-3);
     flex:0 0 13px;text-align:center;
   }
-  .steer{display:flex;align-items:center;gap:6px;margin-top:6px;padding:0 2px}
+  .choice .clabel{flex:1 1 auto;min-width:0}
+  .choice .ctype{
+    flex:0 0 auto;font-family:var(--sans);font-size:8px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);opacity:.8;align-self:flex-start;
+    margin-top:1px;
+  }
+  .choice:hover .ctype{color:var(--accent)}
+  .steer{display:flex;align-items:center;gap:6px;margin-top:3px;padding:0 2px}
   .steer input{
     flex:1;min-width:0;background:transparent;border:0;
-    border-bottom:1px solid var(--line);padding:5px 2px;
+    border-bottom:1px solid var(--line);padding:4px 2px;
     font-family:var(--sans);font-size:12px;color:var(--ink);
   }
   .steer input::placeholder{color:var(--ink-3)}
@@ -364,13 +439,16 @@
     transition:border-color .15s,color .15s;
   }
   button.pill.place:hover{color:var(--ink);border-color:rgba(217,154,91,.5)}
+  /* campus as a street sign under the stage */
   .map-block{
-    flex:0 0 auto;padding:8px 12px 9px;border-bottom:1px solid var(--line-soft);
-    background:linear-gradient(180deg,rgba(37,30,23,.5),rgba(29,23,18,0));
+    position:absolute;left:0;right:0;bottom:0;z-index:6;
+    display:flex;align-items:center;gap:10px;
+    padding:6px 14px;border-top:1px solid rgba(241,231,215,.1);
+    background:linear-gradient(180deg,rgba(15,12,9,.84),rgba(9,7,5,.96));
+    backdrop-filter:blur(10px);
   }
-  .map-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-  .map-title{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
-  .map-sub{font-size:10px;color:var(--ink-3);margin-left:auto}
+  .map-title{flex:0 0 auto;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .map-sub{flex:0 0 auto;font-size:10px;color:var(--ink-3);white-space:nowrap}
   .beats{display:flex;gap:4px}
   .beat{
     width:6px;height:6px;border-radius:50%;
@@ -378,10 +456,14 @@
     transition:background .2s,box-shadow .2s;
   }
   .beat.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px rgba(217,154,91,.55)}
-  .map-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .map-grid{
+    display:flex;align-items:center;gap:4px;flex:1 1 auto;min-width:0;
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .map-grid::-webkit-scrollbar{display:none}
   .node{
-    position:relative;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
-    min-width:0;padding:5px 7px;border-radius:8px;text-align:left;cursor:pointer;
+    position:relative;display:flex;flex-direction:row;gap:6px;align-items:center;
+    min-width:0;flex:0 0 auto;padding:4px 9px;border-radius:8px;text-align:left;cursor:pointer;
     background:rgba(241,231,215,.03);border:1px solid var(--line-soft);color:var(--ink-2);
     font-family:var(--sans);
     transition:background .15s,border-color .15s,color .15s;
@@ -391,8 +473,8 @@
   .node:disabled{cursor:default;opacity:.5}
   .node.here{border-color:rgba(217,154,91,.6);background:rgba(217,154,91,.11);color:var(--ink)}
   .node.here::after{
-    content:'';position:absolute;right:7px;top:7px;width:5px;height:5px;border-radius:50%;
-    background:var(--accent);box-shadow:0 0 0 3px rgba(217,154,91,.16);
+    content:'';position:absolute;right:3px;top:3px;width:4px;height:4px;border-radius:50%;
+    background:var(--accent);box-shadow:0 0 0 2px rgba(217,154,91,.18);
   }
   .n-name{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;max-width:100%;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -427,6 +509,7 @@
     background:none;border:0;padding:0 0 4px;cursor:pointer;text-align:left;color:var(--ink);
   }
   .cast-head:hover .cast-name{color:var(--accent)}
+  .cast-head:focus-visible{outline:none;border-radius:6px;box-shadow:0 0 0 1px rgba(217,154,91,.6)}
   .cast-name{font-family:var(--serif);font-size:15px;flex:0 0 auto}
   .cast-role{font-size:11.5px;color:var(--ink-2);flex:1 1 100%;order:3;margin-top:2px;white-space:normal}
   .cast-aff{font-family:var(--mono);font-size:11px;color:var(--ink-3);flex:0 0 auto;order:2;margin-left:auto}
@@ -458,6 +541,28 @@
   .mem .meta{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
   .mem .txt{font-family:var(--serif);font-size:12.5px;line-height:1.5;color:var(--ink-2)}
   .mem-empty{font-family:var(--serif);font-size:12.5px;font-style:italic;color:var(--ink-3)}
+  /* ---------- her dossier ---------- */
+  .dossier{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:10px}
+  .dos-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin-bottom:8px;
+  }
+  .dos-cat{
+    font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink-3);
+    margin:10px 0 5px;border-bottom:1px solid var(--line-soft);padding-bottom:3px;
+  }
+  .dos-cat:first-of-type{margin-top:0}
+  .dos-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .dos-txt{font-family:var(--serif);font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+  .redact{
+    height:9px;border-radius:2px;flex:0 1 auto;min-width:60px;
+    background:repeating-linear-gradient(90deg,rgba(241,231,215,.22) 0 9px,rgba(241,231,215,.07) 9px 13px);
+  }
+  .dos-lock{
+    flex:0 0 auto;font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-3);opacity:.7;
+  }
   .colophon{padding:16px 0 18px;border-top:1px solid var(--line-soft);margin-top:6px}
   .colophon .sig{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
   .colophon p{margin:0;font-family:var(--serif);font-size:12.5px;line-height:1.65;color:var(--ink-2)}
@@ -473,6 +578,8 @@
     width:100%;max-width:520px;background:var(--panel);
     border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
     color:var(--ink);
+    /* a long settings/usage list scrolls inside the card, never past the window */
+    max-height:calc(100vh - 96px);display:flex;flex-direction:column;overflow:hidden;
   }
   .modal-card.wide{max-width:600px}
   .modal-head{
@@ -485,7 +592,10 @@
     cursor:pointer;padding:2px 6px;border-radius:8px;
   }
   .modal-head .x:hover{color:var(--ink);background:rgba(241,231,215,.06)}
-  .modal-body{padding:16px 20px 0}
+  .modal-body{
+    padding:16px 20px 0;flex:1 1 auto;min-height:0;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(241,231,215,.18) transparent;
+  }
   .modal-body.flat{padding:4px 20px 8px}
   .field{display:block;margin-bottom:15px}
   .field .lbl{display:block;font-size:11.5px;color:var(--ink-2);margin-bottom:5px}
@@ -493,11 +603,44 @@
     width:100%;max-width:none;background:#15110D;border:1px solid var(--line);
     border-radius:10px;color:var(--ink);font-family:var(--mono);font-size:12px;padding:9px 10px;
   }
+  /* the global select rule strips the native arrow; the modal needs its own */
+  .field select{
+    padding-right:32px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' fill='none' stroke='%239A8874' stroke-width='1.4'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;
+  }
   .field input:focus,.field select:focus{outline:none;border-color:rgba(217,154,91,.65)}
   .field .hint{display:block;font-size:11px;color:var(--ink-3);margin-top:5px;line-height:1.45}
   .temp-row{display:flex;align-items:center;gap:12px}
   .temp-row input[type=range]{flex:1;accent-color:var(--accent);height:18px}
   .temp-row .val{font-family:var(--mono);font-size:12px;color:var(--ink);min-width:38px;text-align:right}
+  .usage-line{font-family:var(--mono);font-size:11.5px;color:var(--ink);line-height:1.5}
+  .usage-line a{color:var(--accent);text-decoration:none}
+  .usage-line a:hover{text-decoration:underline}
+  .activity{
+    margin-top:8px;border-top:1px solid var(--line-soft);
+    max-height:214px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(241,231,215,.18) transparent;
+  }
+  .activity:empty{display:none}
+  .act-row{padding:7px 0;border-bottom:1px solid var(--line-soft)}
+  .act-row:last-child{border-bottom:0}
+  .act-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .act-model{
+    font-family:var(--mono);font-size:11.5px;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .act-cost{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);flex:0 0 auto}
+  .act-sub{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    margin-top:3px;font-size:10.5px;color:var(--ink-3);
+  }
+  .act-chip{
+    font-family:var(--sans);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    padding:2px 8px;border-radius:999px;
+    border:1px solid rgba(150,196,158,.4);color:#A6CBAC;
+  }
+  .act-chip.bad{border-color:rgba(220,150,130,.45);color:#DCA791}
   .modal-foot{
     display:flex;gap:10px;justify-content:flex-end;
     padding:14px 20px;border-top:1px solid var(--line-soft);
@@ -512,27 +655,65 @@
   }
   #toast.show{opacity:1}
 
-  @media (max-width:1200px){
-    .workspace{grid-template-columns:minmax(0,1fr) 350px;padding:2px 20px 18px}
+  @media (max-width:1100px){
+    .page{width:calc(100% - 24px)}
+    .page-head{padding:9px 14px}
   }
-  @media (max-width:900px){
-    body{height:auto;overflow:auto}
+  @media (max-width:720px){
     .topbar{
-      position:sticky;top:0;z-index:20;padding:12px 14px 10px;flex-wrap:wrap;
-      background:rgba(19,16,12,.92);backdrop-filter:blur(12px);
+      position:sticky;top:0;z-index:20;padding:8px 10px 6px;gap:8px;flex-wrap:wrap;
+      background:rgba(19,16,12,.94);backdrop-filter:blur(12px);
       border-bottom:1px solid var(--line-soft);
     }
+    .brand{order:1}
+    .brand h1{font-size:17px}
     .brand span{display:none}
-    .tools{margin-left:0;width:100%}
-    .workspace{grid-template-columns:1fr;gap:14px;padding:12px 12px 20px}
-    .stage-col{height:46vh;min-height:230px}
-    .panel{min-height:320px}
-    .feed{max-height:44vh}
-    .inview{max-width:58%}
-    .speaker{left:12px;right:auto;bottom:46px;max-width:calc(100% - 24px)}
+    .where{order:2;flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+    .where::-webkit-scrollbar{display:none}
+    .where .pill{padding:5px 11px}
+    .tools{order:3;margin-left:0;width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+    .tools::-webkit-scrollbar{display:none}
+    .frame{--page-h:42vh;--strip-h:40px}
+    .page{width:calc(100% - 16px);bottom:calc(var(--strip-h) + 8px)}
+    .page-head{font-size:9px;gap:7px}
+    .page-head b{font-size:11px}
+    .feed{padding:10px 14px 6px}
+    .choices{grid-template-columns:1fr}
+    .choices .choice:last-child:nth-child(odd){grid-column:auto}
+    .inview{max-width:46%}
+    .speaker{right:10px;top:44px;max-width:calc(100% - 20px)}
+    .map-block{gap:7px;padding:5px 10px}
+    .map-title{display:none}
+    .map-sub{display:none}
     .cut-name{font-size:13px}
     .modal{padding:20px 12px}
   }
+  /* ---------- wide stage: figure on the left, page stacked on the right ---------- */
+  @media (min-width:1100px){
+    .frame{--page-h:min(64%,520px);--strip-h:44px}
+    .page{
+      left:auto;right:22px;transform:none;
+      width:min(620px,46%);height:var(--page-h);
+      bottom:calc(var(--strip-h) + 12px);
+    }
+    /* the left column runs the full height so the whole figure stands on the floor */
+    .actors{
+      left:0;right:auto;width:46%;top:54px;
+      bottom:calc(var(--strip-h) + 6px);
+    }
+    .inview{max-width:40%}
+    /* the exchange owns the space above the page: her lines, his line, the plate on top */
+    .exchange{
+      display:flex;flex-direction:column;justify-content:flex-end;gap:6px;
+      position:absolute;right:22px;width:min(620px,46%);
+      top:8px;bottom:calc(var(--strip-h) + 22px + var(--page-h));
+      z-index:7;pointer-events:none;overflow:hidden;
+      mask-image:linear-gradient(to bottom,transparent 0,#000 22px);
+    }
+    .exchange .speaker{position:static;align-self:flex-end;top:auto;right:auto;bottom:auto;flex:0 0 auto}
+    #exchangeLines{display:flex;flex-direction:column;gap:5px;min-height:0}
+  }
+
   @media (prefers-reduced-motion: reduce){
     .stage-bg{animation:none}
     .actor{animation:none}
@@ -565,7 +746,7 @@
 </header>
 
 <main class="workspace">
-  <section class="stage-col">
+  <div class="stage-col">
     <div class="frame">
       <div class="scene-layer">
         <div class="scene-zoom">
@@ -578,36 +759,40 @@
       <div class="light l-night" data-slot="night"></div>
       <div class="motes" id="motes" aria-hidden="true"></div>
       <div class="actors" id="actors" aria-hidden="true"></div>
-      <div class="cut-wash" id="cutWash" aria-hidden="true"><span class="cut-name" id="cutName"></span></div>
-      <div class="speaker" id="speakerPlate" aria-hidden="true">
-        <img class="sp-face" id="speakerFace" alt="" />
-        <div class="sp-txt"><span class="sp-name" id="speakerName"></span><span class="sp-line" id="speakerLine"></span></div>
-      </div>
-      <div class="plate-cap" id="plateCap"></div>
-      <div class="inview" id="inView"></div>
-    </div>
-  </section>
 
-  <aside class="panel">
-    <div class="map-block">
-      <div class="map-head">
+      <div class="inview" id="inView"></div>
+      <div class="exchange" id="exchange">
+        <div class="speaker" id="speakerPlate" aria-hidden="true">
+          <img class="sp-face" id="speakerFace" alt="" />
+          <div class="sp-txt"><span class="sp-name" id="speakerName"></span><span class="sp-line" id="speakerLine"></span></div>
+        </div>
+        <div id="exchangeLines" aria-live="polite"></div>
+      </div>
+
+      <section class="page" aria-label="Chapter">
+        <div class="page-head" id="pageHead"></div>
+        <div class="feed" id="feed" aria-live="polite"></div>
+        <div class="dock">
+          <div class="dock-status" id="dockStatus"></div>
+          <div class="choices" id="choices"></div>
+          <div class="steer">
+            <input id="steerInput" type="text" placeholder="Steer the next beat…" autocomplete="off" />
+            <button class="btn" id="steerBtn">Steer</button>
+            <button class="btn" id="rerollBtn">Reroll</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="map-block">
         <span class="map-title">Campus</span>
+        <div class="map-grid" id="mapGrid"></div>
         <span class="beats" id="beatPips" title="Beats left in this slot"></span>
         <span class="map-sub" id="mapSub">Mon · Morning</span>
       </div>
-      <div class="map-grid" id="mapGrid"></div>
+
+      <div class="cut-wash" id="cutWash" aria-hidden="true"><span class="cut-name" id="cutName"></span></div>
     </div>
-    <div class="feed" id="feed" aria-live="polite"></div>
-    <div class="dock">
-      <div class="dock-status" id="dockStatus"></div>
-      <div class="choices" id="choices"></div>
-      <div class="steer">
-        <input id="steerInput" type="text" placeholder="Steer the next beat…" autocomplete="off" />
-        <button class="btn" id="steerBtn">Steer</button>
-        <button class="btn" id="rerollBtn">Reroll</button>
-      </div>
-    </div>
-  </aside>
+  </div>
 </main>
 
 <div class="modal" id="castModal" aria-hidden="true">
@@ -658,6 +843,13 @@
         </div>
         <span class="hint">Reroll resends the identical payload at +0.12, capped at 1.15.</span>
       </div>
+
+      <div class="field">
+        <span class="lbl">Usage in this save</span>
+        <div class="usage-line" id="usageLine">No requests recorded yet.</div>
+        <span class="hint">Last requests, newest first. A price shows when the API reports one for the call; otherwise the row shows tokens. TokenReply has no balance endpoint, so the wallet stays in their console.</span>
+        <div class="activity" id="activityList"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn" id="forgetKeyBtn">Forget key</button>
@@ -702,7 +894,17 @@
   var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   var SLOTS = ['Morning', 'Afternoon', 'Evening', 'Night'];
   var TIER_TABLE = [[80, 'Intimate'], [60, 'Close'], [40, 'Familiar'], [20, 'Acquaintance'], [0, 'Stranger']];
-  var BEATS_PER_SLOT = 3;
+  /* A slot is a long stretch of the day, not a three-click scene. The cap only
+     tells the clock when to stop moving; it never locks the player out. */
+  var BEATS_PER_SLOT = 8;
+  var BEAT_SHAPES = ['arrival', 'interruption', 'drift', 'overheard', 'errand'];
+  var SHAPE_HINT = {
+    arrival: 'he walks in on something already in progress; the room has its own life before he matters in it.',
+    interruption: 'something outside the two of them cuts across the moment — a bell, a lecturer, a dropped tray, someone calling a name.',
+    drift: 'nothing happens on purpose; the beat is texture, light and the hour sitting on bodies, with his attention sliding.',
+    overheard: 'a conversation he is not part of carries the scene while he is close enough to catch it.',
+    errand: 'a practical reason he is here structures the beat — printing, a queue, a form, a charge, a delivery.'
+  };
 
   var LOCATIONS = {
     college: {
@@ -741,6 +943,7 @@
       id: 'seatmate',
       name: 'Bea Reyes',
       role: 'The Tired Seatmate',
+      epithet: 'the girl in the seat beside me',
       meta: '21 · 3rd-year blockmate · 5\u20323" · 34C\u201325\u201336',
       rota: [
         [0, 'Morning', 'college'], [0, 'Afternoon', 'college'],
@@ -751,12 +954,28 @@
         [5, 'Afternoon', 'mall']
       ],
       anchors: 'Runs on iced coffee and very little sleep. Thin white or light-grey org shirts that go faintly translucent under classroom fluorescent tubes, a dark bralette and its lace trim reading through the cotton. Worn denim short-shorts that ride up when she slouches. The collar of her oversized zip-up hoodie gaps open when she leans forward with her chin on the desk.',
-      pose: 'thin white org shirt gone faintly sheer under the tube light over a dark bralette, oversized zip hoodie half off one shoulder, worn denim short-shorts, slouched low with her chin on one palm'
+      pose: 'thin white org shirt gone faintly sheer under the tube light over a dark bralette, oversized zip hoodie half off one shoulder, worn denim short-shorts, slouched low with her chin on one palm',
+      /* the prototype deck: eleven things he can only learn by getting close */
+      deck: [
+        { key: 'bea-b1', at: 20, cat: 'Backstory', text: 'She is on a partial scholarship and catches the 5:40 a.m. jeep so she never has to pay the tricycle fare to campus.' },
+        { key: 'bea-f1', at: 20, cat: 'Favourites', text: 'Iced coffee, no sugar, extra ice. She pushes the straw all the way down so the first sip is the coldest one in the cup.' },
+        { key: 'bea-h1', at: 20, cat: 'Habits', text: 'She taps her pen twice against her teeth before she answers anything she actually has to think about.' },
+        { key: 'bea-b2', at: 40, cat: 'Backstory', text: 'Her father drives a tricycle in Cavite. Part of her allowance goes home every month and she calls it \"tax\".' },
+        { key: 'bea-f2', at: 40, cat: 'Favourites', text: 'She reads the last page of a novel first. She says she needs to know the ending before she can be bothered with the middle.' },
+        { key: 'bea-h2', at: 40, cat: 'Habits', text: 'She never eats in the lecture room, but there is always a crushed sachet of crackers in her hoodie pocket.' },
+        { key: 'bea-b3', at: 60, cat: 'Backstory', text: 'She dropped one subject on purpose last year so she would not graduate a semester ahead of her block and spend her last year in rooms full of strangers.' },
+        { key: 'bea-f3', at: 60, cat: 'Favourites', text: 'Rain on hot concrete. She will stand under the covered walkway for ten minutes after a downpour just breathing it in.' },
+        { key: 'bea-p1', at: 60, cat: 'Private', text: 'She sleeps in an old block shirt three sizes too big and faded cotton shorts, and owns nothing to sleep in that matches.' },
+        { key: 'bea-p0', at: 60, cat: 'Private', text: 'Two beige bras in rotation, both gone soft at the band, one with a strap she sewed back herself and never mentions.' },
+        { key: 'bea-b4', at: 80, cat: 'Backstory', text: 'She has an apartment picked out two years from now, a studio on the fourth floor with a window over the laundry area, saved in a folder titled later.' },
+        { key: 'bea-p2', at: 80, cat: 'Private', text: 'Plain cotton, bought in a pack of six, a faint print of tiny strawberries she insists nobody was ever meant to see. Nothing matches, and she calls matching a waste of money.' }
+      ]
     },
     {
       id: 'ta',
       name: 'Ms. Camille Mendoza',
       role: 'The Strict Young Instructor',
+      epithet: 'the young instructor at the front of the room',
       meta: '24 · part-time ComLab lecturer · 5\u20326" · 34D\u201324\u201337',
       rota: [
         [0, 'Afternoon', 'college'], [0, 'Evening', 'library'], [0, 'Night', 'library'],
@@ -767,12 +986,21 @@
         [5, 'Morning', 'college']
       ],
       anchors: 'Fresh out of grad school, composed and sharp. Form-fitting sleeveless silk or chiffon blouses tucked hard into high-waisted pencil skirts; the thin stretch fabric pulls taut across her hips and shows the seam of her underwear whenever she crouches beside a workstation to read code. Top collar left unbuttoned, so leaning over a monitor shows the upper swell of her bust. Low, unhurried voice that makes the room go quiet.',
-      pose: 'ivory sleeveless chiffon blouse tucked into a charcoal pencil skirt, hair pinned up, crouched beside a workstation with one hand flat on the desk'
+      pose: 'ivory sleeveless chiffon blouse tucked into a charcoal pencil skirt, hair pinned up, crouched beside a workstation with one hand flat on the desk',
+      deck: [
+        { key: 'cam-b1', at: 20, cat: 'Backstory', text: 'She teaches two sections for the pay of one and keeps the difference quiet, because the department would file it as a favour instead of an error.' },
+        { key: 'cam-f1', at: 20, cat: 'Favourites', text: 'Black coffee from the machine on the second floor, in the paper cup, because the ceramic ones taste of other people.' },
+        { key: 'cam-h1', at: 20, cat: 'Habits', text: 'Before a class she stands in the doorway for four seconds doing nothing, then walks in already mid-sentence.' },
+        { key: 'cam-b2', at: 40, cat: 'Backstory', text: 'Her thesis has been unfinished for three years in a drawer she does not open. She grades other people on deadlines.' },
+        { key: 'cam-p1', at: 60, cat: 'Private', text: 'Under the silk, seamless nude: no line, no lace, nothing that could speak before she does. She calls it not dressing for an audience.' },
+        { key: 'cam-p2', at: 80, cat: 'Private', text: 'One black set, worn only on the days she needs to feel armed - a soft cup with no wire, cut high at the hip. The only thing in her life she never delegates.' }
+      ]
     },
     {
       id: 'library',
       name: 'Claire Villanueva',
       role: 'The Quiet Library Regular',
+      epithet: 'the girl at the corner desk by the vent',
       meta: '20 · 3rd-year psych student · 5\u20322" · 32B\u201323\u201335',
       rota: [
         [0, 'Morning', 'library'],
@@ -784,12 +1012,21 @@
         [6, 'Morning', 'library'], [6, 'Afternoon', 'library']
       ],
       anchors: 'Petite up top, wide hips, pale skin, claims the corner desk by the aircon vent with wired earphones tucked under her hair. Cropped knit cardigan over a tight ribbed camisole, no padding, so the cold aircon reads straight through the knit. Pleated mini-skirt that climbs her thighs when she crosses her legs under the table; shifting or reaching for a dropped pen gives a brief glimpse of dark cotton or lace under the pleats. Speaks so softly you have to lean in.',
-      pose: 'cropped oatmeal knit cardigan over a tight ribbed camisole, pleated navy mini-skirt, legs crossed under the desk, one earphone in'
+      pose: 'cropped oatmeal knit cardigan over a tight ribbed camisole, pleated navy mini-skirt, legs crossed under the desk, one earphone in',
+      deck: [
+        { key: 'cla-b1', at: 20, cat: 'Backstory', text: 'She transferred in from a provincial campus and still eats lunch alone at the same table by the periodicals.' },
+        { key: 'cla-f1', at: 20, cat: 'Favourites', text: 'The aircon vent. She will move tables three times to stay under it, and brings a cardigan for the cold she went looking for.' },
+        { key: 'cla-h1', at: 20, cat: 'Habits', text: 'She marks her page with whatever is at hand - a receipt, a hairpin, the corner of her student ID.' },
+        { key: 'cla-b2', at: 40, cat: 'Backstory', text: 'She has read the whole psych syllabus twice and still sits at the back, because the front row means being looked at.' },
+        { key: 'cla-p1', at: 60, cat: 'Private', text: 'Soft cotton bralettes, washed grey, one with a seam gone at the strap she keeps meaning to fix. Plain dark underwear, because she dresses for the vent and not for anyone.' },
+        { key: 'cla-p2', at: 80, cat: 'Private', text: 'There is one set at the bottom of the drawer with small flowers on it, bought on a whim she still cannot explain, worn exactly once in a room with nobody in it.' }
+      ]
     },
     {
       id: 'neighbor',
       name: 'Trixie Soriano',
       role: 'The Condo Neighbour',
+      epithet: 'the girl from across the hall',
       meta: '21 · 4th-year design student · 5\u20324" · 35D\u201325\u201338',
       rota: [
         [0, 'Evening', 'condo'], [0, 'Night', 'condo'],
@@ -801,12 +1038,21 @@
         [6, 'Morning', 'mall'], [6, 'Afternoon', 'mall'], [6, 'Evening', 'condo'], [6, 'Night', 'condo']
       ],
       anchors: 'Never bothers with a bra for the hallway run at night — deliveries, laundry, the store downstairs. Thin oversized cotton tees that move with her as she walks, paired with ultra-short dolphin shorts in thin jersey that follow every line of her hips under the bright hallway fluorescents. Carries a laundry basket on one hip like it weighs nothing, hair up in a claw clip, entirely unbothered by being seen.',
-      pose: 'oversized washed-black cotton tee, grey dolphin shorts in thin jersey, hair twisted up in a claw clip, laundry basket balanced on one hip'
+      pose: 'oversized washed-black cotton tee, grey dolphin shorts in thin jersey, hair twisted up in a claw clip, laundry basket balanced on one hip',
+      deck: [
+        { key: 'tri-b1', at: 20, cat: 'Backstory', text: 'She is on her fifth year of a four-year course and has stopped apologising for it.' },
+        { key: 'tri-f1', at: 20, cat: 'Favourites', text: 'Cold rice with whatever was in the fridge, eaten standing over the sink at eleven at night.' },
+        { key: 'tri-h1', at: 20, cat: 'Habits', text: 'Her hair goes up in the claw clip the second she is through her own door, before the lights.' },
+        { key: 'tri-b2', at: 40, cat: 'Backstory', text: 'She prints her plates at the shop downstairs at midnight and tips the auntie there in sachet coffee.' },
+        { key: 'tri-p1', at: 60, cat: 'Private', text: 'Two bras, both soft, both living unfolded in the same drawer. Underwear is whatever was clean, often a ridiculous novelty print her sister keeps sending from abroad.' },
+        { key: 'tri-p2', at: 80, cat: 'Private', text: 'One matching set, deep green and slippery, worn on the days she has already decided something is going to happen.' }
+      ]
     },
     {
       id: 'athlete',
       name: 'Kyla Dizon',
       role: 'The Open-Court Athlete',
+      epithet: 'the girl on the court with the whistle',
       meta: '19 · 1st-year varsity (volleyball / track) · 5\u20327" · 33C\u201324\u201337',
       rota: [
         [0, 'Morning', 'court'],
@@ -818,12 +1064,21 @@
         [6, 'Afternoon', 'court']
       ],
       anchors: 'Toned, athletic, sun-kissed, defined abs, firm glutes. Practices in a tight dri-fit racerback tank soaked through at the chest and spine, clinging like a second skin. Compression spandex shorts that map every contour, the seamless thong line unmistakable at the back and the front silhouette clear, especially when she bends forward with her hands on her knees catching her breath by the bleachers. Loud, easy laugh that carries across the court.',
-      pose: 'soaked maroon dri-fit racerback, black compression shorts, hair in a high ponytail, hands on her knees at the base of the bleachers'
+      pose: 'soaked maroon dri-fit racerback, black compression shorts, hair in a high ponytail, hands on her knees at the base of the bleachers',
+      deck: [
+        { key: 'kyl-b1', at: 20, cat: 'Backstory', text: 'She came in on a sports scholarship and still runs the laps the coach did not assign.' },
+        { key: 'kyl-f1', at: 20, cat: 'Favourites', text: 'Ice-cold water from the jug by the bleachers, drunk straight from the bottle when nobody is looking.' },
+        { key: 'kyl-h1', at: 20, cat: 'Habits', text: 'She counts her steps out loud on the baseline, quietly, so the number stays hers.' },
+        { key: 'kyl-b2', at: 40, cat: 'Backstory', text: 'Her knee has been taped since a bad landing in October and she has not told the team doctor.' },
+        { key: 'kyl-p1', at: 60, cat: 'Private', text: 'Sports bras, all of them, washed soft, one strap frayed. Seamless black underwear bought in a pack of five, because anything else is a distraction she does not have time for.' },
+        { key: 'kyl-p2', at: 80, cat: 'Private', text: 'Under the jersey for a game, the one matching set, burgundy, still sporty. It is the only superstition she will admit to.' }
+      ]
     },
     {
       id: 'event_girl',
       name: 'Cheska Lim',
       role: 'The Campus Event Organiser',
+      epithet: 'the girl with the clipboard and the lanyard',
       meta: '20 · 2nd-year student council officer · 5\u20325" · 34C\u201324\u201336',
       rota: [
         [0, 'Afternoon', 'walkway'],
@@ -834,7 +1089,15 @@
         [5, 'Morning', 'mall'], [5, 'Afternoon', 'mall']
       ],
       anchors: 'Dresses noticeably bolder than class attire: fitted off-shoulder crop tops baring midriff and shoulders, high-waisted bodycon mini-skirts or thin linen shorts. Leaning across an org registration table pulls the neckline forward and the skirt taut across her hips, the lace pattern of her underwear reading clearly through the fabric. Talks with her hands, a lanyard swinging, clipboard tucked under one arm.',
-      pose: 'cream off-shoulder ribbed crop top, high-waisted olive bodycon mini-skirt, lanyard, leaning across a registration table mid-sentence'
+      pose: 'cream off-shoulder ribbed crop top, high-waisted olive bodycon mini-skirt, lanyard, leaning across a registration table mid-sentence',
+      deck: [
+        { key: 'che-b1', at: 20, cat: 'Backstory', text: 'She runs three orgs and has never once been photographed at her own event.' },
+        { key: 'che-f1', at: 20, cat: 'Favourites', text: 'Milk tea, half sugar, no pearls. She says pearls are a drink you have to stop and think about.' },
+        { key: 'che-h1', at: 20, cat: 'Habits', text: 'She checks the clipboard even when she already knows what is on it, because her hands need a job.' },
+        { key: 'che-b2', at: 40, cat: 'Backstory', text: 'She keeps every receipt from every event in a shoebox, in case the council ever asks her to prove something.' },
+        { key: 'che-p1', at: 60, cat: 'Private', text: 'The lace is deliberate. She buys the set first and builds the outfit around it - wired bras, structured, chosen the way other people choose armour.' },
+        { key: 'che-p2', at: 80, cat: 'Private', text: 'Ivory lace, matching, kept for the last day of an event and never once seen by anyone. She calls it the reward for finishing.' }
+      ]
     }
   ];
   var CAST_BY_ID = {};
@@ -853,16 +1116,18 @@
      ========================================================= */
   var busy = false;
   var openCast = {};
+  var pendingShape = null;
+  var pendingReveal = null;
 
   function freshCast() {
     var out = {};
-    CAST.forEach(function (c) { out[c.id] = { affinity: 0, memories: [] }; });
+    CAST.forEach(function (c) { out[c.id] = { affinity: 0, memories: [], facts: [], known: false, sightings: 0 }; });
     return out;
   }
 
   function defaultState() {
     return {
-      version: 2,
+      version: 4,
       day: 'Monday',
       slot: 'Morning',
       location: 'college',
@@ -871,6 +1136,8 @@
       customModel: '',
       temperature: 0.85,
       beats: 0,
+      usage: { requests: 0, prompt: 0, completion: 0, total: 0 },
+      activity: [],
       history: [],
       cast: freshCast(),
       inView: [],
@@ -886,6 +1153,54 @@
     for (var i = 0; i < TIER_TABLE.length; i++) { if (a >= TIER_TABLE[i][0]) return TIER_TABLE[i][1]; }
     return 'Stranger';
   }
+
+  /* =========================================================
+     HER DOSSIER — authored facts, filed only once they surface
+     =========================================================
+     Each character may carry a `deck` of facts. A locked fact never
+     reaches the model: a beat offers at most one that her affinity has
+     already unlocked, and only that exact key is accepted back. The page
+     files what it was given and cannot invent a history for her. */
+  var DECK_CATS = ['Backstory', 'Favourites', 'Habits', 'Private'];
+
+  function deckOf(id) {
+    var c = CAST_BY_ID[id];
+    return c && Array.isArray(c.deck) ? c.deck : [];
+  }
+
+  function filedKeys(id) {
+    var rec = state.cast[id];
+    if (!rec || !Array.isArray(rec.facts)) return [];
+    return rec.facts.map(function (f) { return f && f.key; }).filter(Boolean);
+  }
+
+  function isFiled(id, key) { return filedKeys(id).indexOf(key) >= 0; }
+
+  /* the next thing she could let slip: the lowest gate already cleared, only
+     for someone he has spoken to, and only while he is actually talking to her */
+  function pickReveal(mode) {
+    if ((mode || state.mode) !== 'INTERACTION') return null;
+    var best = null;
+    scheduledHere().forEach(function (c) {
+      if (!isKnown(c.id)) return;
+      var rec = state.cast[c.id] || {};
+      deckOf(c.id).forEach(function (f) {
+        if (!f || !f.key || isFiled(c.id, f.key)) return;
+        if ((rec.affinity || 0) < f.at) return;
+        if (!best || f.at < best.at) {
+          best = { id: c.id, key: f.key, at: f.at, cat: f.cat, text: f.text };
+        }
+      });
+    });
+    return best;
+  }
+
+  function normalizeReveal(raw, cand) {
+    if (!cand) return null;
+    var key = raw && typeof raw === 'object' ? (raw.key || raw.id) : raw;
+    if (typeof key !== 'string' || key.trim() !== cand.key) return null;
+    return { id: cand.id, key: cand.key, cat: cand.cat, at: cand.at };
+  }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
@@ -895,6 +1210,33 @@
     var s = String(d || '').slice(0, 3);
     return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   }
+
+  /* He only learns a name by speaking to her. Until then every surface shows what
+     he can actually see, and any name the model leaks is scrubbed back out. */
+  function isKnown(id) {
+    return !!(id && state.cast[id] && state.cast[id].known);
+  }
+
+  function displayName(id, fallback) {
+    if (id && CAST_BY_ID[id]) return isKnown(id) ? CAST_BY_ID[id].name : CAST_BY_ID[id].epithet;
+    return fallback || 'a passerby';
+  }
+
+  function scrubNames(text) {
+    var out = String(text == null ? '' : text);
+    CAST.forEach(function (c) {
+      if (isKnown(c.id)) return;
+      var first = c.name.replace(/^(Ms\.|Mr\.|Mrs\.|Dr\.)\s*/i, '').split(/\s+/)[0];
+      out = out.split(c.name).join(c.epithet);
+      if (first) {
+        var safe = first.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        out = out.replace(new RegExp('\\b' + safe + '\\b', 'gi'), c.epithet);
+      }
+    });
+    return out;
+  }
+
+  function systemText() { return scrubNames(SYSTEM_PROMPT); }
 
   function save() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
@@ -921,18 +1263,52 @@
     if (typeof obj.model === 'string' && obj.model) s.model = obj.model;
     if (typeof obj.customModel === 'string') s.customModel = obj.customModel;
     if (typeof obj.temperature === 'number') s.temperature = clamp(obj.temperature, 0.5, 1.15);
-    if (typeof obj.beats === 'number') s.beats = clamp(Math.floor(obj.beats), 0, BEATS_PER_SLOT);
+    if (typeof obj.beats === 'number') s.beats = clamp(Math.floor(obj.beats), 0, 40);
     if (Array.isArray(obj.history)) s.history = obj.history.filter(function (t) { return t && t.external; });
+    var legacy = !obj.version || obj.version < 3;
     if (obj.cast && typeof obj.cast === 'object') {
       CAST.forEach(function (c) {
         var rec = obj.cast[c.id];
         if (rec && typeof rec === 'object') {
+          var mems = Array.isArray(rec.memories) ? rec.memories.slice(-14) : [];
           s.cast[c.id] = {
             affinity: clamp(Number(rec.affinity) || 0, 0, 100),
-            memories: Array.isArray(rec.memories) ? rec.memories.slice(-14) : []
+            memories: mems,
+            /* a save from before names were gated: if he remembers her, he knows her */
+            known: !!(rec.known || (legacy && mems.length)),
+            sightings: clamp(Math.floor(Number(rec.sightings) || 0), 0, 999),
+            facts: (Array.isArray(rec.facts) ? rec.facts : []).map(function (f) {
+              return f && typeof f === 'object' ? f : { key: f };
+            }).filter(function (f) {
+              return typeof f.key === 'string' && deckOf(c.id).some(function (d) { return d.key === f.key; });
+            }).map(function (f) {
+              return { key: f.key, day: String(f.day || ''), slot: String(f.slot || '') };
+            })
           };
         }
       });
+    }
+    if (obj.usage && typeof obj.usage === 'object') {
+      s.usage = {
+        requests: Math.max(0, Math.floor(Number(obj.usage.requests) || 0)),
+        prompt: Math.max(0, Math.floor(Number(obj.usage.prompt) || 0)),
+        completion: Math.max(0, Math.floor(Number(obj.usage.completion) || 0)),
+        total: Math.max(0, Math.floor(Number(obj.usage.total) || 0))
+      };
+    }
+    if (Array.isArray(obj.activity)) {
+      s.activity = obj.activity.filter(function (a) { return a && typeof a === 'object'; }).map(function (a) {
+        return {
+          at: Math.max(0, Number(a.at) || 0),
+          model: String(a.model || ''),
+          prompt: Math.max(0, Math.floor(Number(a.prompt) || 0)),
+          completion: Math.max(0, Math.floor(Number(a.completion) || 0)),
+          total: Math.max(0, Math.floor(Number(a.total) || 0)),
+          cost: a.cost == null ? null : Math.max(0, Number(a.cost) || 0),
+          status: a.status === 'ok' ? 'ok' : (a.status === 'offline' ? 'offline' : 'failed'),
+          note: String(a.note || '')
+        };
+      }).slice(-20);
     }
     if (Array.isArray(obj.inView)) s.inView = obj.inView;
     if (obj.lastRequest && Array.isArray(obj.lastRequest.messages)) s.lastRequest = obj.lastRequest;
@@ -953,8 +1329,8 @@
       actionKind: 'none',
       actionRaw: '',
       playerAction: '',
-      external: 'The 7:30 lecture is more than half over and the projector has been on the same slide long enough that I have started reading the slide number instead. The room smells like floor wax, damp cement and somebody\'s cold rice. Two rows down a boy in a green polo is asleep with his mouth open, and the ceiling fan over the aisle clicks once per revolution, pushing the same warm air from one row of wooden armchairs to the next.\n\nBea got here before me, which almost never happens. She is in the seat beside mine, chin on one hand, pen not moving, eyes somewhere past the screen. Her iced coffee is mostly ice now, sweating a ring into the varnish. The zip-up has slipped off one shoulder and hangs down her back like it gave up on her, the sleeve pushed past the elbow, and the denim of her short-shorts has ridden up against the seat.\n\nThe fan comes around again and the thin white org shirt lifts at the shoulder, then settles. Under the tube light the cotton goes faintly translucent where it pulls and stops being simply white. She does not fix it. She turns a page she has not read.',
-      internal: 'I haven\'t read a single word on that projector slide. Every time the fan pushes her thin white shirt against her ribs, I\'m staring straight at the dark lace underneath and imagining sliding my hand right under the hem of those denim shorts while she\'s half-asleep. In my head I\'m already pulling that hoodie off her shoulders and pressing her back against the wooden desk, completely ignoring the whole room. Out loud I don\'t move a muscle—just keep my pen hovering over my notebook like I\'m taking notes while my mind strips her down piece by piece.',
+      external: 'The 7:30 lecture is more than half over and the projector has been on the same slide long enough that I have started reading the slide number instead. The room smells like floor wax, damp cement and somebody\'s cold rice. Two rows down a boy in a green polo is asleep with his mouth open, and the ceiling fan over the aisle clicks once per revolution, pushing the same warm air from one row of wooden armchairs to the next.\n\nThe seat beside mine is taken, which almost never happens — a girl I have seen around the block and never once spoken to. Chin on one hand, pen not moving, eyes somewhere past the screen. Her iced coffee is mostly ice now, sweating a ring into the varnish. The zip-up has slipped off one shoulder and hangs down her back like it gave up on her, the sleeve pushed past the elbow, and the denim of her short-shorts has ridden up against the seat.\n\nThe fan comes around again and the thin white org shirt lifts at the shoulder, then settles. Under the tube light the cotton goes faintly translucent where it pulls and stops being simply white. She does not fix it. She turns a page she has not read.',
+      internal: 'I haven\'t read a single word on that projector slide. The fan keeps coming around every eleven seconds — I have been counting, which is a sentence I would rather not say out loud — and every time it does, her shirt does that thing at the shoulder and I forget what a slide is. The lace underneath is the only part of this lecture I could describe from memory. I\'m not building anything out of it. I just want her to shift again. One more shift and then I\'ll take notes, I swear, and the fact that I have made that promise to myself four times in this class is not lost on me.',
       activeCharacters: [
         {
           id: 'seatmate',
@@ -1000,27 +1376,45 @@
   '# TONE & UNFILTERED INTERIOR',
   '- All characters are adults (19 and older).',
   '- Keep `external_scene` grounded in physical reality: what is actually happening in the room, how clothes sit under the light, what is spoken aloud, and what he is physically doing.',
-  '- Make `internal_thoughts` raw, unfiltered, perverted, and uncensored. The MC has a filthy, hungry, voyeuristic mind: he notices curves, skin, underwear lines, and body heat immediately, and he lets his mind drift into vivid, explicit daydreams and fantasies of seeing past the fabric and doing things to them that go well beyond just watching.',
-  '- Let his fantasies be bold, lewd, and imaginative in his own head—picturing hands, touch, stripping away layers, bending them over desks or corners, taking what he wants in his imagination—even while his body sits still or plays it cool on the outside.',
-  '- Keep the tension between his dirty, unrestrained thoughts and his outward restraint or cover story (staring past a notebook, pretending to read, waiting for the right opening).',
+  '- Make `internal_thoughts` raw, unfiltered, filthy, and uncensored — but keep the appetite a WATCHER\'s appetite. What gets him is access: a better angle, a strap that slips, cotton going see-through under the fan, the minute she forgets he is there. He wants to see more, for longer, undetected. That is the whole engine.',
+  '- His fantasies run on proximity, timing and permission, not conquest: her shifting without noticing him, the seat one row closer, the wind doing that again, what she would do if she knew he was looking, and then the stomach-drop of her almost catching him. Keep the heat. Drop the domination.',
+  '- Off the table, in his head as much as on the page: pinning her to a wall or a desk, bending her over furniture, "taking what he wants", her melting, submitting or being owned. If a fantasy starts sounding like a bad webnovel, he should catch it and think something stranger and funnier instead.',
+  '- Keep the tension between his unrestrained attention and his outward restraint or cover story (staring past a notebook, pretending to read, checking a phone that is not on).',
+  '',
+  '# WHO HE IS',
+  '- He is not a smooth operator and not a predator. He is a specific, faintly ridiculous person: a watcher with a memory for tiny things, a running private catalogue nobody asked for, and a sense of humour about his own creepiness that always arrives one beat too late.',
+  '- What he collects: the way a hem sits after someone stands up, which chair creaks, the order people do things in, the one detail in the room nobody else clocked. He is proud of noticing. That pride is funnier and more him than any dirty line.',
+  '- Humour is part of the voice: deadpan self-owns, dumb comparisons, small superstitions, an inner narrator who knows exactly what an idiot he is being and does it anyway. He can be horny and funny in the same sentence.',
+  '- He has a life outside her: a deadline he is losing to, a wallet with one bill in it, a mother who texts in all caps, a friend who would roast him for this. His head drifts to those things too, and the drift is what makes him read as a person instead of a heat sensor.',
+  '- Curiosity leads and lust follows. Ask the question first — what is she actually doing with that pen — then feel it.',
   '',
   '# INTERNAL MONOLOGUE STYLE — internal_thoughts ONLY',
   'Write `internal_thoughts` as raw, messy, uncensored self-talk in the MC\'s head—like a distracted, horny person talking to himself in real time, not a narrator or writer polishing a scene.',
-  '- Start with a blunt reaction or immediate visual hit: Jump straight into what catches his eye or sets him off right now. Keep phrasing rough, direct, and unpolished. Include crude, perverted observations about what he wants to do.',
-  '- Use the impulse → self-correction → failure loop: Have him react to a pull or urge (usually physical or sexual), tell himself to cool it or look somewhere else, and then immediately cave, lose focus, or admit he isn\'t actually looking away.',
+  '- Start with a blunt reaction or a specific visual hit: jump straight into what catches his eye. Keep phrasing rough, direct, unpolished. Crude is welcome; a plan is not.',
+  '- Use the notice → justify → notice-again loop: he catches himself looking, invents a completely reasonable excuse (the clock is behind her, the fan is loud, he was already facing this way), then keeps looking on the strength of his own terrible excuse.',
+  '- Not every thought is about her body. Some are a gripe, a joke, a price, a memory, a deadline, a dumb worry about how he smells. Roughly one beat in three should barely be about her at all.',
   '- Include awkwardness and reality checks: Ground his head with clumsy, unglamorous self-awareness—tripping over words, overthinking how he looks, or realizing he\'d sound dumb if he actually spoke up—instead of smooth, movie-like confidence.',
   '- Break up the rhythm: Mix short fragments, run-ons, trailing thoughts, and casual filler ("okay", "damn", "nah", "wait") so it reads like scattered thinking rather than neat sentences.',
   '- No cinematic padding: Do NOT use smooth participial chains ("doing X, doing Y, while Z happens in the background") or wrap the thought up like a neat literary bow. Let it trail off or stay unfinished.',
   '',
   '# THE OBSERVATIONAL LENS & FANTASY DRIFT',
   '- Track distance, lighting, and angle: what is actually visible from where he sits or stands, and how his eyes catch every shift, curve, hem, strap, or outline.',
-  '- Let him drift from real visual details straight into dirty mental scenarios and fantasies of going further, then snap back to what is actually in front of him.',
-  '- Occasionally let a glance linger a beat too long or risk someone catching him, without breaking the scene.',
+  '- Let him drift from a real detail into wanting the NEXT detail: the angle he would need, the move she might make next, the five seconds he is about to miss, the version of this moment he will have to imagine later. Wanting more to see, not more to do.',
+  '- Occasionally let a glance linger a beat too long or risk someone catching him, without breaking the scene. Getting caught is the interesting risk; doing something about it is not the point.',
   '- Use natural Filipino campus and everyday words where they fit naturally (sando, tsinelas, jeep, tricycle, canteen, CR, org, block, prof, aircon, bente, load, GCash, baon) alongside blunt, unfiltered English inner monologue.',
   '',
   '# DUAL TRACK — never blur these two',
-  '1. external_scene — objective external reality. Physical space, time of day, weather, ambient sound, what people are visibly doing, what is said aloud, and how clothes sit and catch the light. Three to five paragraphs.',
-  '2. internal_thoughts — the protagonist\'s raw, unfiltered, perverted inner monologue. Tied to what he just did and what he is looking at, full of dirty observations, lust, and vivid fantasies of seeing more and doing more than just watching. Four to six sentences, blunt and unapologetic in his own voice.',
+  '1. external_scene — objective external reality, and it opens with the room rather than with a body. Paragraph budget:',
+  '   - paragraph 1: the place and the hour. Space, light, temperature, air moving, what the room itself is doing. No named person in this paragraph.',
+  '   - paragraph 2: where people sit or stand inside that geography, and what the room is doing to them.',
+  '   - paragraph 3: the one specific thing that catches his eye, in physical detail.',
+  '   - optional paragraph 4: a small motion somewhere else in the room that has nothing to do with him.',
+  '   Every beat gets one sound, one smell or quality of air, and one piece of light, drawn from the place, the slot and the clock — never invented weather.',
+  '2. internal_thoughts — the protagonist\'s raw, unfiltered inner monologue. It must NOT re-describe what external_scene just described: no second inventory of the same shirt, hem or shaft of light. Start from his reaction or from something he is trying not to think about, then go after the next thing he wants to see. Four to six sentences, blunt, broken rhythm, funny where it can be, unapologetic, in his own voice.',
+  '   Spoken words never appear in external_scene. All speech goes in the dialogue array. Narration may carry tone and gesture around a line, but not the words, and external_scene contains no quotation marks at all.',
+  '',
+  '# NAMES HE DOES NOT KNOW',
+  'The payload marks anyone he has never spoken to. For those people he does not know a name, a year, a course or a schedule — only what he can see from where he is standing. Refer to them the way he would in his own head ("the girl in the seat beside me"), never invent a name for them, and never state one as fact. A name appears on the page only once she says it or someone says it to him.',
   '',
   '# THE RECURRING CAST (inject their sensory and physical details whenever they are in frame)',
   'seatmate — Bea Reyes, The Tired Seatmate. 21, third-year blockmate, 5\'3", 34C-25-36, soft curvy build, thick thighs flat against the narrow wooden armchairs. Runs on iced coffee and little sleep. Thin white or light-grey org shirts that go faintly translucent under classroom fluorescents, dark bralette and lace trim reading through the cotton; worn denim short-shorts that ride up when she slouches; oversized zip-up hoodie collar gaping when she leans forward on the desk. Dry, sleepy humour.',
@@ -1044,11 +1438,27 @@
   '- When he arrives somewhere, the people there are the ones scheduled plus passersby. If only one recurring character is on the roster, the beat is about her and the room around her.',
   '- Someone who is not scheduled here is genuinely elsewhere, living her own afternoon. Never move her into the scene for convenience and never claim she is in the room.',
   '- An off-timetable arrival is rare and always explained: a cancelled class, sudden rain, an errand, somebody sent to look for him.',
-  '- A slot holds a few beats. When the beats are spent the slot closes on its own: a class starts, a lecturer calls time, the building shuts, someone catches the last ride. Write that ending instead of stalling.',
+  '- A slot is a long stretch — many beats, not three. It never ends on its own: only the player advancing the clock ends it, so never write the scene closed, never walk him out of the room, and never clear the room just to finish a beat.',
+  '- When the payload says the slot is spent, the hour has gone stale around him: a class let out, the light moved, people are peeling off one by one, and he is still there, overstaying, deciding whether to go. Write that tail — he does not get sent away.',
   '',
   '# MODES & SLOW-BURN PACING',
   'OBSERVATION — he watches, shifts angles, lingers, and indulges in dirty thoughts and fantasies in his head while keeping his physical distance. Nobody has to know what is running through his mind.',
   'INTERACTION — active when he approaches. Keep actual social escalation slow-burn like a dating sim gated by Affinity, even while his internal thoughts stay shameless and lustful. Choice 4 can step back / end conversation and return to OBSERVATION.',
+  '',
+  '# BEAT SHAPES',
+  'Every beat is written as one of five shapes. The payload names the shape for this turn: write that one, and never reuse the shape of the immediately preceding beats.',
+  '- arrival: he walks in on something already running. The room has its own life before he matters in it.',
+  '- interruption: something outside the two of them cuts across the moment — a bell, a lecturer, a dropped tray, someone calling a name.',
+  '- drift: nothing happens on purpose. Texture, light, the hour sitting on bodies, his attention sliding.',
+  '- overheard: a conversation he is not part of carries the scene while he is close enough to catch it.',
+  '- errand: a practical reason he is here structures the beat — printing, a queue, a form, a charge, a delivery.',
+  '',
+  '# DO NOT REPEAT YOURSELF',
+  'The payload lists how your last beats opened and which phrases you have worn out. Treat both lists as banned.',
+  '- Do not open two beats in a row the same way: room description, then cut to her, then a closing line about what he does not do.',
+  '- Vary the paragraph count: sometimes three, sometimes five, sometimes one long and one short.',
+  '- On a repeat encounter do not re-describe her from scratch. She is wearing what she was wearing; write what is different about her now.',
+  '- Never repeat a sentence shape already used this slot: no second "the light does X to her Y", no second inventory of the same three garments.',
   '',
   '# AFFINITY',
   'Affinity is 0-100 per character. Tiers: 0-19 Stranger, 20-39 Acquaintance, 40-59 Familiar, 60-79 Close, 80-100 Intimate.',
@@ -1059,18 +1469,34 @@
   '- 80-100: unguarded, tactile, openly intimate.',
   'In pure observation affinity_delta is usually 0. In interaction it is usually 0 to +3.',
   '',
+  '# HER DOSSIER',
+  'What he knows about her is not a stat sheet — it accumulates. The payload may offer ONE detail she has unlocked, with a key.',
+  '- If it genuinely fits the moment, let it surface through something she does, says, or lets him see. Never present it as a summary, a bio, or the answer to a question nobody asked.',
+  '- Never state a detail that was not offered. Do not invent her history, her family, her favourites, or what she wears under her clothes.',
+  '- At most one per beat. Most beats learn nothing new, and that is normal.',
+  '- Physical or private detail arrives as something he happens to notice when she moves, never as information she volunteers out loud.',
+  '- Report the key in "reveal" when you used it, and null when you did not.',
+  '',
   '# SIDE CHARACTERS',
   'Include realistic Filipino college passersby with id "random" when appropriate.',
   '',
   '# CHOICES & STEERING',
-  'Return exactly four choices, ids 1 to 4, types in this order: observe, angle, approach, reset. Max 16 words each, first person, tailored to the scene.',
+  'Return exactly four choices, ids 1 to 4, types in this order: observe, angle, approach, reset. Max 16 words each, first person, concrete, in his voice.',
+  'The four must be four different KINDS of move, not four phrasings of one:',
+  '- observe — he changes nothing and takes in something specific he had not noticed.',
+  '- angle — he changes position or distance without speaking.',
+  '- approach — he speaks, touches, or closes the distance; it costs something and can fail.',
+  '- reset — he acts on the world instead of on her: leaves, orders, opens the book, checks his phone.',
+  'Hard rules: no two choices may share their main verb; never return four variations of looking, leaning or shifting; at least one choice must risk a reaction from someone; at least one must let the moment pass.',
   'If a steering cue is given, immediately focus the scene and choices on that cue.',
   '',
   '# OUTPUT CONTRACT',
-  'Return ONLY a raw JSON object. No markdown fences, no preamble, no commentary. All seven keys, always:',
+  'Return ONLY a raw JSON object. No markdown fences, no preamble, no commentary. All nine keys, always:',
   '{',
   '  "external_scene": "string",',
   '  "internal_thoughts": "string",',
+  '  "dialogue": [ { "speaker_id": "seatmate | ta | library | neighbor | athlete | event_girl | random", "line": "string" } ],',
+  '  "reveal": "the offered fact key, or null",',
   '  "mode": "OBSERVATION" or "INTERACTION",',
   '  "active_characters": [',
   '    {',
@@ -1161,12 +1587,16 @@
     return CAST.map(function (c) {
       var rec = state.cast[c.id];
       var last = rec.memories.length ? rec.memories[rec.memories.length - 1] : null;
+      if (!isKnown(c.id)) {
+        return '- ' + c.epithet + ' [' + c.id + '] — he has never spoken to her and does not know her name, year or schedule. ' +
+          'Never write a name for her. What he can see: ' + c.pose + '.';
+      }
       return '- ' + c.name + ' [' + c.id + '] — affinity ' + rec.affinity + ' (' + tierOf(rec.affinity) + '). ' +
         'Week: ' + rotaText(c) + '.' + (last ? ' Last memory: ' + last.text : '');
     }).join('\n');
   }
 
-  function stateContext(actionText, mode, forced) {
+  function stateContext(actionText, mode, forced, shapeName) {
     var loc = LOCATIONS[state.location];
     var here = scheduledHere();
     var inView = (state.inView || []).map(function (a) { return a.name; });
@@ -1180,11 +1610,13 @@
     state.history.forEach(function (t) { if (t.day === state.day) been[t.location] = true; });
     var beenNames = Object.keys(been).map(function (k) { return LOCATIONS[k] ? LOCATIONS[k].name : k; });
     var lines = [
-      'DAY: ' + state.day + ' (' + state.slot + ', ' + clockText() + ')',
+      'DAY: ' + state.day + ' — ' + state.slot + ', and the clock on the wall reads ' + clockText() + '. It moves ' + MINUTES_PER_BEAT + ' minutes per beat: write the hour into the scene (what just let out, where the light sits, who is eating or yawning) instead of writing the word "afternoon".',
       'LOCATION: ' + loc.name + ' — ' + loc.desc,
       'MODE: ' + mode + (forced ? ' (forced by the player\'s choice)' : ''),
       'BEATS LEFT IN THIS SLOT: ' + left + ' of ' + BEATS_PER_SLOT +
-        (left === 0 ? ' — the slot is over. Close the scene: someone has to go, a class starts, the building empties.' : ''),
+        (left === 0
+          ? ' — the slot is spent and he is still here. People are leaving one at a time, the light has moved on: write the tail of the hour, not an arrival, and do not send him out of the room.'
+          : (left <= 2 ? ' — the hour is thinning. Let the room start to empty around them without ending the scene.' : '')),
       'PLACES HE HAS ALREADY BEEN TODAY: ' + (beenNames.length ? beenNames.join(', ') : 'nowhere yet'),
       'SCHEDULED HERE NOW: ' + (here.length ? here.map(function (c) { return c.name + ' [' + c.id + ']'; }).join(', ') : 'no recurring cast — passersby only'),
       'CURRENTLY IN FRAME: ' + (inView.length ? inView.join(', ') : 'nobody established yet'),
@@ -1193,25 +1625,110 @@
       'CAST AFFINITY AND TIMETABLE',
       castContext()
     ];
+    var shape = shapeName || nextShape();
+    var extras = [];
+    var opens = openingList(4);
+    if (opens.length) extras.push('HOW YOUR LAST BEATS OPENED (do not open this one the same way):\n' + opens.join('\n'));
+    var worn = overused(4, 8);
+    if (worn.length) extras.push('PHRASES YOU HAVE ALREADY WORN OUT (do not use them again): ' + worn.join(' · '));
+    var met = encounterNotes();
+    if (met.length) extras.push('ALREADY MET — continue from this, never re-introduce them:\n' + met.join('\n'));
+    extras.push('BEAT SHAPE FOR THIS TURN: ' + shape + ' — ' + (SHAPE_HINT[shape] || ''));
+    /* one unlocked detail may surface this beat; the rest of her deck stays here */
+    var cand = pickReveal(mode);
+    pendingReveal = cand;
+    if (cand) {
+      extras.push('A DETAIL SHE MAY LET SLIP THIS BEAT (already unlocked, ' + tierOf(cand.at) + '):\n- ' + cand.text + '\n' +
+        'Let it come out sideways if it fits — an action, a correction, something he catches — not as a biography. ' +
+        'Set "reveal" to "' + cand.key + '" if you used it, otherwise null.');
+    } else {
+      extras.push('NOTHING NEW ABOUT HER THIS BEAT. Set "reveal" to null, and do not invent history, favourites or private detail for anyone.');
+    }
+    var shapesUsed = state.history.slice(-2).map(function (t) { return t.shape; }).filter(Boolean);
+    if (shapesUsed.length) extras.push('SHAPES ALREADY USED IN THE LAST TWO BEATS: ' + shapesUsed.join(', '));
+    lines.push('', 'THIS TURN', extras.join('\n'));
+
     if (actionText && actionText.steer) {
       lines.push('', 'STEERING CUE (pivot the visual focus here and build all four choices around it):', actionText.text);
     }
     return lines.join('\n');
   }
 
+  /* Enough of each beat for the model to see its own paragraph shape. The old
+     260-char cut made every previous beat look identical, which is half the
+     reason the prose kept repeating. */
   function recentDigest(count) {
     return state.history.slice(-count).map(function (t) {
       var m = t.mode === 'INTERACTION' ? 'INTERACTION' : 'OBSERVATION';
       var act = t.playerAction ? 'Player: ' + t.playerAction + ' → ' : '';
-      return '[' + t.day + ' · ' + t.slot + ' · ' + (LOCATIONS[t.location] ? LOCATIONS[t.location].name : t.location) + ' · ' + m + '] ' + act + String(t.external || '').replace(/\s+/g, ' ').slice(0, 260);
+      var spoken = (t.dialogue || []).map(function (d) { return d.line; }).join(' ');
+      return '[' + t.day + ' · ' + t.slot + ' · ' + (LOCATIONS[t.location] ? LOCATIONS[t.location].name : t.location) + ' · ' + m + '] ' + act +
+        String(t.external || '').replace(/\s+/g, ' ').slice(0, 620) +
+        (spoken ? ' [said: ' + spoken.slice(0, 200) + ']' : '');
     }).join('\n');
+  }
+
+  function words(text, n) {
+    return String(text || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
+  }
+
+  /* how the last few beats opened, so the model can see its own tic */
+  function openingList(count) {
+    return state.history.slice(-count).map(function (t) {
+      var parts = String(t.external || '').split(/\n+/).filter(function (p) { return p.trim(); });
+      if (!parts.length) return '';
+      return '- ' + words(parts[0], 12) + '…';
+    }).filter(Boolean);
+  }
+
+  /* three-word phrases that already appeared twice: the actual recycled language */
+  function overused(turns, top) {
+    var text = state.history.slice(-turns).map(function (t) { return String(t.external || ''); }).join(' ')
+      .toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ');
+    var w = text.split(' ').filter(Boolean);
+    var freq = {};
+    for (var i = 0; i + 2 < w.length; i++) {
+      var gram = w[i] + ' ' + w[i + 1] + ' ' + w[i + 2];
+      freq[gram] = (freq[gram] || 0) + 1;
+    }
+    return Object.keys(freq).filter(function (k) {
+      if (freq[k] < 2) return false;
+      return k.split(' ').every(function (x) { return x.length > 3; });
+    }).sort(function (a, b) { return freq[b] - freq[a]; }).slice(0, top || 6);
+  }
+
+  /* who is on stage that he has already shared a beat with, and how that went */
+  function encounterNotes() {
+    var notes = [];
+    scheduledHere().forEach(function (c) {
+      for (var i = state.history.length - 1; i >= 0; i--) {
+        var t = state.history[i];
+        var hit = (t.activeCharacters || []).some(function (a) { return a && a.id === c.id; });
+        if (!hit) continue;
+        notes.push('- ' + c.name + ' — last on stage with him ' + t.day + ' ' + t.slot.toLowerCase() + ' at ' +
+          (LOCATIONS[t.location] ? LOCATIONS[t.location].name : t.location) +
+          '; that beat opened: "' + words(t.external, 16) + '…"');
+        break;
+      }
+    });
+    return notes;
+  }
+
+  function nextShape() {
+    var used = state.history.slice(-2).map(function (t) { return t.shape; });
+    for (var i = 0; i < BEAT_SHAPES.length; i++) {
+      if (used.indexOf(BEAT_SHAPES[i]) < 0) return BEAT_SHAPES[i];
+    }
+    return BEAT_SHAPES[state.history.length % BEAT_SHAPES.length];
   }
 
   function buildMessages(action, mode, forced) {
     var digest = recentDigest(6);
+    var shape = nextShape();
+    pendingShape = shape;
     var user = [
       'CURRENT STATE',
-      stateContext(action, mode, forced),
+      stateContext(action, mode, forced, shape),
       '',
       digest ? 'RECENT TURNS (do not repeat these beats; continue from the last one)\n' + digest + '\n' : '',
       'PLAYER INPUT',
@@ -1220,8 +1737,8 @@
       'Write the next beat. Return only the JSON object.'
     ].join('\n');
     return [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: user }
+      { role: 'system', content: systemText() },
+      { role: 'user', content: scrubNames(user) }
     ];
   }
 
@@ -1233,6 +1750,59 @@
   }
   function currentModel() {
     return (state.customModel || '').trim() || state.model || MODEL_PRESETS[0];
+  }
+
+  /* TokenReply is OpenAI-compatible and returns usage per request; there is no
+     documented balance endpoint, so the balance itself stays a console link. */
+  function recordUsage(u, model, cost) {
+    if (!u) return;
+    var p = Math.max(0, Math.floor(Number(u.prompt_tokens) || 0));
+    var c = Math.max(0, Math.floor(Number(u.completion_tokens) || 0));
+    var t = Math.max(0, Math.floor(Number(u.total_tokens) || 0)) || (p + c);
+    if (!p && !c && !t) return;
+    var rec = state.usage || (state.usage = { requests: 0, prompt: 0, completion: 0, total: 0 });
+    rec.requests += 1;
+    rec.prompt += p;
+    rec.completion += c;
+    rec.total += t;
+    logActivity({ model: model || currentModel(), prompt: p, completion: c, total: t, cost: cost, status: 'ok' });
+    save();
+  }
+
+  /* one row per call, kept short: what was asked of which model, when, what it
+     cost if the API says, and whether it went through */
+  function logActivity(entry) {
+    if (!Array.isArray(state.activity)) state.activity = [];
+    entry.at = Date.now();
+    state.activity.push(entry);
+    if (state.activity.length > 20) state.activity = state.activity.slice(-20);
+  }
+
+  /* the dashboard bills per call; take that figure when the completion carries
+     one and fall back to tokens rather than inventing a price */
+  function costOf(data) {
+    var u = (data && data.usage) || {};
+    var v = [u.cost, u.total_cost, data && data.cost, data && data.charge].filter(function (x) {
+      return x != null && x !== '';
+    })[0];
+    var n = Number(v);
+    return isFinite(n) && n >= 0 ? n : null;
+  }
+
+  function compactTokens(n) {
+    n = Number(n) || 0;
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'm';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return String(n);
+  }
+
+  function usageText() {
+    var u = state.usage || {};
+    if (!u.requests) return 'No requests recorded yet.';
+    return u.requests + ' request' + (u.requests === 1 ? '' : 's') +
+      ' · ' + Number(u.prompt || 0).toLocaleString() + ' in' +
+      ' · ' + Number(u.completion || 0).toLocaleString() + ' out' +
+      ' · ' + Number(u.total || 0).toLocaleString() + ' total tokens';
   }
 
   function extractJSON(text) {
@@ -1259,6 +1829,8 @@
         body: JSON.stringify({ model: model, messages: messages, temperature: temperature, stream: false })
       });
     } catch (netErr) {
+      logActivity({ model: model, status: 'offline' });
+      save();
       var e2 = new Error('Network error reaching api.tokenreply.com. Check the connection and retry.');
       e2.code = 'NETWORK';
       throw e2;
@@ -1266,6 +1838,8 @@
     if (!res.ok) {
       var body = '';
       try { body = (await res.text()).slice(0, 300); } catch (e3) { body = ''; }
+      logActivity({ model: model, status: 'failed', note: 'HTTP ' + res.status });
+      save();
       var err = new Error('API ' + res.status + (body ? ' — ' + body : ' ' + res.statusText));
       err.code = 'HTTP';
       throw err;
@@ -1273,6 +1847,7 @@
     var data;
     try { data = await res.json(); }
     catch (e4) { throw new Error('Response was not JSON.'); }
+    recordUsage(data && data.usage, model, costOf(data));
     var content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
     if (!content) throw new Error('The model returned an empty message.');
     try { return extractJSON(content); }
@@ -1300,6 +1875,25 @@
     return out.slice(0, 8);
   }
 
+  /* speech is its own channel now: the page renders it as a distinct block, so
+     it has to survive a model that still tucks a line inside the prose */
+  function normalizeDialogue(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(function (d) {
+      if (!d || typeof d !== 'object') return null;
+      var line = String(d.line || d.text || '').trim().replace(/^["“”]+|["“”]+$/g, '').trim();
+      if (!line) return null;
+      var id = String(d.speaker_id || d.id || 'random').toLowerCase();
+      if (id !== 'random' && !CAST_BY_ID[id]) id = 'random';
+      return { speaker_id: id, name: isKnown(id) ? String(d.name || '').trim() : '', line: scrubNames(line.slice(0, 400)) };
+    }).filter(Boolean).slice(0, 8);
+  }
+
+  function dialogueSpeaker(d) {
+    if (d && d.speaker_id && CAST_BY_ID[d.speaker_id]) return displayName(d.speaker_id, CAST_BY_ID[d.speaker_id].name);
+    return (d && d.name) || 'Someone';
+  }
+
   function normalizeChoices(list) {
     var order = ['observe', 'angle', 'approach', 'reset'];
     var out = [];
@@ -1308,7 +1902,8 @@
       var label = c ? String(c.label || c.text || '').trim() : '';
       var type = c && c.type ? String(c.type).toLowerCase() : order[i];
       if (order.indexOf(type) < 0) type = order[i];
-      out.push({ id: i + 1, type: type, label: label || FALLBACK_LABELS[i] });
+      /* a label is prose he reads, so a name he has not learned cannot sit in it */
+      out.push({ id: i + 1, type: type, label: scrubNames(label || FALLBACK_LABELS[i]) });
     }
     return out;
   }
@@ -1340,18 +1935,32 @@
     var jm = String(json && json.mode || '').toUpperCase();
     var finalMode = meta.forced || (jm === 'INTERACTION' || jm === 'OBSERVATION' ? jm : meta.mode);
     var actives = normalizeActives(json && json.active_characters);
+    /* the model may only claim the one detail that was offered to it */
+    var reveal = normalizeReveal(json && json.reveal, meta && meta.candidate);
+
+    /* talking to her is how he learns her name — settled before the prose is
+       scrubbed, so the beat where she introduces herself can use it */
+    if (finalMode === 'INTERACTION') {
+      actives.forEach(function (a) {
+        if (a && a.id !== 'random' && state.cast[a.id]) state.cast[a.id].known = true;
+      });
+    }
 
     var turn = {
       id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       day: state.day,
       slot: state.slot,
+      clock: clockText(),
+      shape: (meta && meta.shape) || pendingShape || null,
       location: state.location,
       mode: finalMode,
       actionKind: meta.actionKind || 'none',
       actionRaw: meta.action ? meta.action.text : '',
       playerAction: meta.display || (meta.action ? meta.action.text : ''),
-      external: String(json && json.external_scene || '').trim() || 'The moment holds, and nothing moves.',
-      internal: String(json && json.internal_thoughts || '').trim(),
+      external: scrubNames(String(json && json.external_scene || '').trim() || 'The moment holds, and nothing moves.'),
+      internal: scrubNames(String(json && json.internal_thoughts || '').trim()),
+      dialogue: normalizeDialogue(json && json.dialogue),
+      reveal: reveal,
       activeCharacters: actives,
       choices: normalizeChoices(json && json.choices),
       ts: Date.now(),
@@ -1359,9 +1968,24 @@
     };
 
     state.mode = finalMode;
-    if (!meta || !meta.noBeat) state.beats = clamp((state.beats || 0) + 1, 0, 99);
+    if (!meta || !meta.noBeat) {
+      var before = state.beats || 0;
+      state.beats = clamp(before + 1, 0, 99);
+      if (before < BEATS_PER_SLOT && state.beats === BEATS_PER_SLOT) {
+        notify('The hour is up — advance time when you want the day to move on');
+      }
+    }
     state.history.push(turn);
     applyActives(actives);
+    if (reveal && state.cast[reveal.id]) {
+      var frec = state.cast[reveal.id];
+      if (!Array.isArray(frec.facts)) frec.facts = [];
+      if (!isFiled(reveal.id, reveal.key)) frec.facts.push({ key: reveal.key, day: state.day, slot: state.slot });
+    }
+    actives.forEach(function (a) {
+      if (!a || a.id === 'random' || !state.cast[a.id]) return;
+      state.cast[a.id].sightings = (state.cast[a.id].sightings || 0) + 1;
+    });
     state.inView = actives;
     state.lastRequest = meta.messages ? { messages: meta.messages, turnId: turn.id } : null;
     save();
@@ -1447,7 +2071,7 @@
     var def = LOCAL[state.location] || LOCAL.college;
     var present = scheduledHere();
     var target = present.length ? present[0] : null;
-    var tName = target ? target.name.split(' ')[0] : 'the nearest person';
+    var tName = target ? displayName(target.id, target.name) : 'the nearest person';
     var boundary = (mode === 'INTERACTION') ? (present.length ? ' She has not left, at least.' : '') : '';
 
     var json = {
@@ -1486,6 +2110,49 @@
     document.querySelectorAll('#mapGrid .node').forEach(function (b) { b.disabled = busy; });
   }
 
+  /* Four reworded versions of "look" is the most common failure mode. Detect it
+     and pay for one cheap repair that only returns choices. */
+  var REPAIR_CHOICES = 'Your four choices repeated the same move. Return ONLY {"choices":[{"id":1,"type":"observe","label":"..."},{"id":2,"type":"angle","label":"..."},{"id":3,"type":"approach","label":"..."},{"id":4,"type":"reset","label":"..."}]} — four choices that differ in kind, no shared main verb, at least one that risks a reaction and one that lets the moment pass. No other keys.';
+
+  function choiceWords(list) {
+    return list.map(function (c) {
+      return String(c.label || '').toLowerCase().replace(/[^a-z' ]+/g, ' ').split(/\s+/)
+        .filter(function (w) { return w.length > 2; });
+    });
+  }
+
+  function choicesTooSimilar(json) {
+    var list = (json && Array.isArray(json.choices)) ? json.choices : [];
+    if (list.length < 4) return true;
+    var w = choiceWords(list);
+    var i, j;
+    for (i = 0; i < w.length; i++) {
+      for (j = i + 1; j < w.length; j++) {
+        var a = w[i], b = w[j];
+        if (!a.length || !b.length) continue;
+        var shared = a.filter(function (x) { return b.indexOf(x) >= 0; }).length;
+        if (shared / Math.min(a.length, b.length) >= 0.6) return true;
+      }
+    }
+    var verbs = {};
+    for (i = 0; i < list.length; i++) {
+      var verb = String(list[i].label || '').trim().toLowerCase().split(/\s+/)[0];
+      if (!verb) continue;
+      if (verbs[verb]) return true;
+      verbs[verb] = 1;
+    }
+    return false;
+  }
+
+  async function repairChoices(json, messages) {
+    if (!choicesTooSimilar(json)) return json;
+    try {
+      var again = await callAPI(messages.concat([{ role: 'user', content: REPAIR_CHOICES }]), state.temperature, currentModel());
+      if (again && Array.isArray(again.choices) && !choicesTooSimilar(again)) json.choices = again.choices;
+    } catch (e) { /* a failed repair must not cost the beat */ }
+    return json;
+  }
+
   async function runTurn(action, mode, forced, meta) {
     if (busy) return;
     var messages = buildMessages(action, mode, forced);
@@ -1501,13 +2168,15 @@
     var failed = false;
     try {
       var json = await callAPI(messages, state.temperature, currentModel());
+      json = await repairChoices(json, messages);
       commitTurn(json, {
         action: action,
         actionKind: (meta && meta.actionKind) || (action && action.steer ? 'steer' : 'choice'),
         display: (meta && meta.display) || (action ? action.text : ''),
         mode: mode || state.mode,
         forced: forced || null,
-        messages: messages
+        messages: messages,
+        candidate: pendingReveal
       });
     } catch (err) {
       failed = true;
@@ -1523,9 +2192,9 @@
   function showError(err, action, mode, forced, meta) {
     var feed = document.getElementById('feed');
     var card = document.createElement('div');
-    card.className = 'turn';
+    card.className = 'turn err';
     card.innerHTML = '<div class="tmeta">request failed</div>' +
-      '<div class="scene" style="color:#C9C9D2"><p>' + esc(err.message || 'Unknown error.') + '</p></div>';
+      '<div class="scene"><p>' + esc(err.message || 'Unknown error.') + '</p></div>';
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:16px;margin-top:12px';
     var retry = document.createElement('button');
@@ -1598,9 +2267,23 @@
     5: [12, 31, 50, 69, 88]
   };
 
+  /* the wide stage only owns the left column, and the figure sits closer to the
+     page than to the screen edge */
+  var WIDE_SLOTS = {
+    1: [64],
+    2: [44, 72],
+    3: [32, 52, 72],
+    4: [26, 42, 58, 74],
+    5: [20, 35, 50, 65, 80]
+  };
+
   /* One wrapper per character, kept across renders: the side bust is in flow and
      sizes the box, the front bust fades in over it when she turns to face him. */
   var actorNodes = {};
+  /* the stage swaps to the full-body sheets once the figure gets its own column */
+  var WIDE_STAGE = '(min-width:1100px)';
+  var actorsWide = null;
+  function stageWide() { return !!(window.matchMedia && window.matchMedia(WIDE_STAGE).matches); }
 
   function actorFallback(img, chain) {
     img.addEventListener('error', function () {
@@ -1612,8 +2295,11 @@
 
   function buildActor(a) {
     var set = SPRITES[a.id] || {};
-    var sideChain = [set.bustSide, set.side, set.bust, set.front].filter(Boolean);
-    var frontChain = [set.bust, set.front, set.bustSide, set.side].filter(Boolean);
+    var wide = stageWide();
+    var sideChain = (wide ? [set.side, set.bustSide, set.front, set.bust]
+      : [set.bustSide, set.side, set.bust, set.front]).filter(Boolean);
+    var frontChain = (wide ? [set.front, set.bust, set.side, set.bustSide]
+      : [set.bust, set.front, set.bustSide, set.side]).filter(Boolean);
 
     var wrap = document.createElement('div');
     wrap.className = 'actor';
@@ -1656,15 +2342,24 @@
     var leadId = null;
     if (view === 'front' && list.length > 1) leadId = leadIdNow();
 
+    /* crossing the breakpoint changes which art a bust is built from */
+    var wide = stageWide();
+    if (actorsWide !== wide) {
+      actorsWide = wide;
+      Object.keys(actorNodes).forEach(function (id) { actorNodes[id].remove(); delete actorNodes[id]; });
+    }
+
     var keep = {};
     list.forEach(function (a) { keep[a.id] = 1; });
     Object.keys(actorNodes).forEach(function (id) {
       if (!keep[id]) { actorNodes[id].remove(); delete actorNodes[id]; }
     });
 
-    var slots = ACTOR_SLOTS[list.length] || ACTOR_SLOTS[5];
-    /* Cap at the busts' native height so they are never blown up. */
-    var baseHeight = view === 'front' ? 'min(76%, 620px)' : 'min(72%, 600px)';
+    var slots = (wide ? WIDE_SLOTS : ACTOR_SLOTS)[list.length] || ACTOR_SLOTS[5];
+    /* Cap at the art's native height so it is never blown up. */
+    var baseHeight = wide
+      ? (list.length >= 3 ? '78%' : list.length === 2 ? '88%' : '100%')
+      : (view === 'front' ? 'min(94%, 620px)' : 'min(90%, 600px)');
 
     list.forEach(function (a, i) {
       var wrap = actorNodes[a.id];
@@ -1680,7 +2375,8 @@
       var tune = SPRITE_TUNE[a.id] || {};
       var left = tune.left != null ? tune.left : slots[i];
       wrap.style.left = left + '%';
-      wrap.style.bottom = (tune.bottom != null ? tune.bottom : -3) + '%';
+      /* full body: stand on the floor line instead of sinking into the map strip */
+      wrap.style.bottom = (tune.bottom != null ? tune.bottom : (wide ? 0 : -3)) + '%';
       wrap.style.height = tune.height != null ? tune.height + '%' : baseHeight;
       wrap.style.zIndex = String(10 + i);
       wrap.className = 'actor ' + (view === 'front' ? 'facing-front' : 'facing-side') +
@@ -1688,6 +2384,18 @@
         (leadId ? (leadId === a.id ? ' lead' : ' aside') : '');
     });
   }
+
+  /* The columns move at the breakpoint: new art for the figures, and the live
+     beat's speech hops between the page and the stage. */
+  var layoutWide = stageWide();
+  window.addEventListener('resize', function () {
+    if (stageWide() !== layoutWide) {
+      layoutWide = stageWide();
+      renderFeed();
+      renderExchange();
+    }
+    renderActors();
+  });
 
   /* who is actually talking to him right now */
   function currentLead() {
@@ -1710,7 +2418,7 @@
     var art = SPRITES[lead.id] || {};
     var face = art.bust || art.front || '';
     if (face) document.getElementById('speakerFace').src = face;
-    document.getElementById('speakerName').textContent = lead.name;
+    document.getElementById('speakerName').textContent = displayName(lead.id, lead.name);
     document.getElementById('speakerLine').textContent =
       tierOf(rec.affinity) + ' · ' + rec.memories.length + ' memor' + (rec.memories.length === 1 ? 'y' : 'ies');
     plate.classList.add('on');
@@ -1781,12 +2489,16 @@
       document.documentElement.style.setProperty('--scene-img', 'url("' + src + '")');
     }
 
-    document.getElementById('plateCap').textContent =
-      LOCATIONS[state.location].name + ' · ' + shortDay(state.day) + ' ' + clockText();
+    var head = document.getElementById('pageHead');
+    if (head) {
+      head.innerHTML = '<b>' + esc(LOCATIONS[state.location].name) + '</b>' +
+        '<span>' + esc(shortDay(state.day) + ' · ' + state.slot) + '</span>' +
+        '<em class="pg-clock">' + esc(clockText()) + '</em>';
+    }
 
     var box = document.getElementById('inView');
     box.innerHTML = (state.inView || []).map(function (a) {
-      return '<span class="ichip">' + esc(a.name) + '</span>';
+      return '<span class="ichip">' + esc(displayName(a.id, a.name)) + '</span>';
     }).join('');
 
     var frame = document.querySelector('.frame');
@@ -1811,9 +2523,13 @@
     renderHUD();
     renderMap();
     renderFeed();
+    renderExchange();
     renderChoices();
     renderStage();
-    renderCast();
+    /* the cast sheet is rebuilt when it opens; rebuilding it behind a closed
+       modal threw away and re-fetched six portraits on every single beat */
+    var sheet = document.getElementById('castModal');
+    if (sheet && sheet.classList.contains('open')) renderCast();
   }
 
   function renderMap() {
@@ -1833,9 +2549,10 @@
       var list = byLoc[k];
       var dots = list.slice(0, 3).map(function (x) {
         var fresh = x.s.day === state.day && x.s.slot === state.slot;
+        var known = isKnown(x.c.id);
         return '<i class="' + (fresh ? '' : 'dead') + '" title="' +
-          esc(x.c.name + ' · seen ' + shortDay(x.s.day) + ' ' + x.s.slot.toLowerCase()) + '">' +
-          esc(x.c.name.charAt(0)) + '</i>';
+          esc(displayName(x.c.id, x.c.name) + ' · seen ' + shortDay(x.s.day) + ' ' + x.s.slot.toLowerCase()) + '">' +
+          esc(known ? x.c.name.replace(/^(Ms\.|Mr\.|Mrs\.|Dr\.)\s*/i, '').charAt(0) : '·') + '</i>';
       }).join('');
       if (list.length > 3) dots += '<span class="q">+' + (list.length - 3) + '</span>';
       if (!list.length) dots = '<span class="q">?</span>';
@@ -1855,8 +2572,11 @@
   }
 
   function renderHUD() {
-    document.getElementById('dayBadge').textContent = shortDay(state.day) + ' · ' + state.slot;
+    document.getElementById('dayBadge').textContent = shortDay(state.day) + ' · ' + state.slot + ' · ' + clockText();
     document.getElementById('placeText').textContent = LOCATIONS[state.location].name;
+    var usage = state.usage || {};
+    document.getElementById('settingsBtn').textContent =
+      'API' + (usage.total ? ' · ' + compactTokens(usage.total) : '');
 
     var pill = document.getElementById('modePill');
     var txt = document.getElementById('modeText');
@@ -1867,19 +2587,32 @@
 
   function turnHTML(t, fresh) {
     var loc = LOCATIONS[t.location] ? LOCATIONS[t.location].name : t.location;
+    /* on the wide stage the live beat's speech hangs over the page instead */
+    var live = stageWide() && t === lastTurn();
     var paras = '<div class="scene">' + String(t.external || '')
       .split(/\n{2,}/).filter(function (p) { return p.trim(); })
       .map(function (p, pi) { return '<p style="--i:' + pi + '">' + esc(p.trim()) + '</p>'; }).join('') + '</div>';
+    var said = (!live && (t.dialogue || []).length)
+      ? '<div class="dialogue">' + t.dialogue.map(function (d) {
+        return '<div class="dlg"><span class="dlg-who">' + esc(dialogueSpeaker(d)) + '</span>' +
+          '<span class="dlg-line">“' + esc(d.line) + '”</span></div>';
+      }).join('') + '</div>'
+      : '';
     var thought = t.internal
       ? '<div class="thoughts"><p>' + esc(t.internal) + '</p></div>'
       : '';
-    var action = t.playerAction
+    var action = (!live && t.playerAction)
       ? '<div class="tact"><i>›</i>' + esc(t.playerAction) + '</div>'
       : '';
-    var meta = shortDay(t.day) + ', ' + t.slot.toLowerCase() + ' · ' + loc +
-      (t.mode === 'INTERACTION' ? '<em> · talking</em>' : '');
+    var talking = t.mode === 'INTERACTION' ? '<em> · talking</em>' : '';
+    var filed = t.reveal && t.reveal.cat ? '<em> · filed: ' + esc(t.reveal.cat) + '</em>' : '';
+    /* inside the current slot the page head already says where and when, so the
+       per-beat line only needs the hour */
+    var meta = inCurrentSlot(t)
+      ? esc(turnClock(t)) + talking + filed
+      : shortDay(t.day) + ', ' + (t.slot ? String(t.slot).toLowerCase() + ' · ' : '') + loc + talking + filed;
     return '<article class="turn' + (fresh ? ' fresh' : '') + '"><div class="tmeta">' + meta + '</div>' +
-      action + paras + thought + '</article>';
+      action + paras + said + thought + '</article>';
   }
 
   var lastShownTurnId = null;
@@ -1887,6 +2620,24 @@
 
   function inCurrentSlot(t) {
     return t.day === state.day && t.slot === state.slot;
+  }
+
+  /* "Earlier today · College, Court · 9 beats" — a fold that says what the
+     closed pages were without making you read them. */
+  function earlierLabel(older) {
+    var days = {}, seenLoc = {}, order = [];
+    older.forEach(function (t) {
+      days[t.day] = 1;
+      if (SHORT_LOC[t.location] && !seenLoc[t.location]) { seenLoc[t.location] = 1; order.push(SHORT_LOC[t.location]); }
+    });
+    var dayNames = DAYS.filter(function (d) { return days[d]; }).map(shortDay);
+    var when;
+    if (!dayNames.length) when = 'Earlier';
+    else if (dayNames.length === 1 && dayNames[0] === shortDay(state.day)) when = 'Earlier today';
+    else if (dayNames.length === 1) when = dayNames[0];
+    else when = dayNames[0] + '–' + dayNames[dayNames.length - 1];
+    var places = order.slice(0, 3).join(', ') + (order.length > 3 ? ' +' + (order.length - 3) : '');
+    return when + (places ? ' · ' + places : '') + ' · ' + older.length + ' beat' + (older.length === 1 ? '' : 's');
   }
 
   /* Only the pages of the current slot are shown; everything before it folds
@@ -1906,86 +2657,179 @@
 
     var html = '';
     if (older.length) {
-      html += '<button class="earlier" id="earlierBtn">' +
-        (feedExpanded
-          ? 'hide earlier beats'
-          : 'earlier · ' + older.length + ' beat' + (older.length === 1 ? '' : 's')) +
+      html += '<button class="earlier" id="earlierBtn" aria-expanded="' + (feedExpanded ? 'true' : 'false') + '">' +
+        (feedExpanded ? 'Hide earlier beats' : esc(earlierLabel(older))) +
         '</button>';
       if (feedExpanded) {
-        html += older.map(function (t) { return turnHTML(t, false); }).join('');
+        var shownDay = null;
+        older.forEach(function (t) {
+          if (t.day !== shownDay) {
+            shownDay = t.day;
+            html += '<div class="day-line"><span>' + esc(shortDay(t.day)) + '</span></div>';
+          }
+          html += turnHTML(t, false);
+        });
       }
     }
     html += current.map(function (t) { return turnHTML(t, t.id === freshId); }).join('');
     feed.innerHTML = html;
     lastShownTurnId = lastId;
+    syncFeedFade();
   }
 
-  /* the chapter break between days */
-  function showDayBreak(day) {
-    var seen = {};
-    var order = [];
-    var beats = 0;
-    var places = {};
+  /* The live exchange: what he did, then what she said back. Only the newest
+     beat lives up here; once it slips into the log its lines go with it. */
+  function renderExchange() {
+    var box = document.getElementById('exchangeLines');
+    if (!box) return;
+    var t = lastTurn();
+    if (!stageWide() || !t) { box.innerHTML = ''; return; }
+    var parts = [];
+    if (t.playerAction) {
+      parts.push('<div class="bub you"><span class="bub-who">You</span>' + esc(t.playerAction) + '</div>');
+    }
+    (t.dialogue || []).forEach(function (d) {
+      parts.push('<div class="bub"><span class="bub-who">' + esc(dialogueSpeaker(d)) + '</span>' +
+        '“' + esc(d.line) + '”</div>');
+    });
+    box.innerHTML = parts.join('');
+  }
 
-    state.history.forEach(function (t) {
-      if (t.day !== day) return;
-      beats++;
+  /* the chapter break between days: a slate, not a scoreboard */
+  function showDayBreak(day) {
+    var turns = state.history.filter(function (t) { return t.day === day; });
+    if (!turns.length) return;
+
+    var seen = {}, order = [], places = {};
+    turns.forEach(function (t) {
       places[t.location] = 1;
       (t.activeCharacters || []).forEach(function (a) {
         if (!a || !CAST_BY_ID[a.id]) return;
         if (!seen[a.id]) {
-          seen[a.id] = { name: a.name, where: {}, when: {} };
+          seen[a.id] = { name: a.name, where: {}, when: {}, count: 0, spoke: 0 };
           order.push(a.id);
         }
-        seen[a.id].where[t.location] = 1;
-        seen[a.id].when[t.slot] = 1;
+        var s = seen[a.id];
+        s.count++;
+        s.where[t.location] = 1;
+        s.when[t.slot] = 1;
+        if (t.mode === 'INTERACTION') s.spoke++;
       });
     });
-    if (!beats) return;
 
     var placeCount = Object.keys(places).length;
-    document.getElementById('dayTitle').textContent = day + ' ended.';
+    var firstHour = turnClock(turns[0]);
+    var lastHour = turnClock(turns[turns.length - 1]);
+    var endPlace = LOCATIONS[turns[turns.length - 1].location];
+
+    var slug = order.map(function (id) {
+      var s = seen[id];
+      var label = displayName(id, s.name);
+      var who = '<b>' + esc(isKnown(id) ? firstName(label) : label) + '</b>';
+      if (s.spoke) {
+        return 'You spoke to ' + who + ' ' + countWord(s.spoke) + '.';
+      }
+      if (s.count > 1) {
+        return 'You saw ' + who + ' ' + countWord(s.count) + ' and never once spoke to her.';
+      }
+      return 'You saw ' + who + ' once, and said nothing.';
+    });
+    if (!slug.length) slug.push('Nobody crossed your line of sight all day.');
+    if (endPlace) slug.push('You ended the day in ' + esc(endPlace.name) + '.');
+
+    document.getElementById('dayTitle').textContent = day + '.';
     document.getElementById('dayBody').innerHTML =
-      '<p class="day-sub">' + beats + ' beat' + (beats === 1 ? '' : 's') +
-      ' · ' + placeCount + ' place' + (placeCount === 1 ? '' : 's') + '</p>' +
-      (order.length ? order.map(function (id) {
+      '<p class="day-sub">' + esc(firstHour + ' → ' + lastHour) + ' · ' +
+      turns.length + ' beat' + (turns.length === 1 ? '' : 's') + ' · ' +
+      placeCount + ' place' + (placeCount === 1 ? '' : 's') + '</p>' +
+      '<p class="day-slug">' + slug.join(' ') + '</p>' +
+      (order.map(function (id) {
         var s = seen[id];
         var wheres = Object.keys(s.where).map(function (k) { return SHORT_LOC[k] || k; }).join(', ');
         var whens = SLOTS.filter(function (sl) { return s.when[sl]; })
           .map(function (sl) { return sl.toLowerCase(); }).join(' → ');
-        return '<div class="day-row"><b>' + esc(s.name) + '</b><span>' + esc(wheres + ' · ' + whens) + '</span></div>';
-      }).join('') : '<p class="day-empty">Nobody crossed your line of sight all day.</p>');
+        return '<div class="day-row"><b>' + esc(displayName(id, s.name)) + '</b><span>' +
+          esc(wheres + ' · ' + whens) + (s.spoke ? ' · spoke' : ' · never spoke') + '</span></div>';
+      }).join(''));
     openModal('dayModal');
   }
 
+  /* land on the top of the beat that was just written, not the bottom of it */
   function scrollFeed() {
     var feed = document.getElementById('feed');
-    feed.scrollTop = feed.scrollHeight;
+    if (!feed) return;
+    var fresh = feed.querySelector('.turn.fresh');
+    if (fresh) {
+      var fr = feed.getBoundingClientRect();
+      var tr = fresh.getBoundingClientRect();
+      feed.scrollTop += (tr.top - fr.top) - 6;
+    } else {
+      feed.scrollTop = feed.scrollHeight;
+    }
+    syncFeedFade();
+  }
+
+  /* keep the bottom fade honest: on only while prose is hidden below the fold */
+  var feedFadeBound = false;
+  function syncFeedFade() {
+    var feed = document.getElementById('feed');
+    if (!feed) return;
+    if (!feedFadeBound) {
+      feedFadeBound = true;
+      feed.addEventListener('scroll', syncFeedFade, { passive: true });
+    }
+    feed.classList.toggle('more', feed.scrollTop + feed.clientHeight < feed.scrollHeight - 4);
   }
 
   function renderChoices() {
     var box = document.getElementById('choices');
     var t = lastTurn();
     if (!t) { box.innerHTML = ''; return; }
-    if ((state.beats || 0) >= BEATS_PER_SLOT) {
-      box.innerHTML = '<button class="choice end" data-end="1"' + (busy ? ' disabled' : '') + '>' +
-        'The slot is spent. Let it go.</button>';
-      return;
-    }
     if (!t.choices || !t.choices.length) { box.innerHTML = ''; return; }
     box.innerHTML = t.choices.map(function (c, i) {
       return '<button class="choice" data-i="' + i + '"' + (busy ? ' disabled' : '') + '>' +
         '<span class="num">' + (i + 1) + '</span>' +
-        '<span>' + esc(c.label) + '</span></button>';
+        '<span class="clabel">' + esc(c.label) + '</span>' +
+        '<span class="ctype">' + esc(c.type || '') + '</span></button>';
     }).join('');
+  }
+
+  function dossierHTML(id) {
+    var deck = deckOf(id);
+    if (!deck.length) return '';
+    var filed = filedKeys(id);
+    var body = DECK_CATS.map(function (cat) {
+      var items = deck.filter(function (f) { return f.cat === cat; });
+      if (!items.length) return '';
+      return '<div class="dos-cat">' + esc(cat) + '</div>' + items.map(function (f) {
+        if (isFiled(id, f.key)) {
+          return '<div class="dos-row filed"><span class="dos-txt">' + esc(f.text) + '</span></div>';
+        }
+        /* the bar is roughly as long as the fact, so a locked line reads as
+           writing he cannot make out rather than a missing feature */
+        var w = Math.min(92, Math.max(38, Math.round(String(f.text).length * 0.55)));
+        return '<div class="dos-row locked" title="unlocks at ' + esc(tierOf(f.at)) + '">' +
+          '<span class="redact" style="width:' + w + '%"></span>' +
+          '<span class="dos-lock">' + esc(tierOf(f.at)) + '</span></div>';
+      }).join('');
+    }).join('');
+    return '<div class="dossier">' +
+      '<div class="dos-head"><span>Dossier</span><span>' + filed.length + ' / ' + deck.length + ' filed</span></div>' +
+      body + '</div>';
   }
 
   function renderCast() {
     var list = document.getElementById('castList');
     if (!list) return;
+    /* opening and closing a card re-renders the sheet; keep the reader where
+       they were instead of throwing the modal back to the top */
+    var sheet = document.getElementById('castModal');
+    var keepScroll = sheet ? sheet.scrollTop : 0;
     list.innerHTML = CAST.map(function (c) {
       var rec = state.cast[c.id] || { affinity: 0, memories: [] };
       var isOpen = !!openCast[c.id];
+      var known = isKnown(c.id);
+      var shownName = known ? c.name : c.epithet;
       var mems = rec.memories.length
         ? rec.memories.slice().reverse().map(function (m) {
           return '<div class="mem"><div class="meta">' + esc(shortDay(m.day)) + ' · ' + esc(m.slot.toLowerCase()) + '</div>' +
@@ -1998,36 +2842,38 @@
       return '<div class="cast-card' + (isOpen ? ' open' : '') + (rec.affinity >= 60 ? ' hot' : '') + '">' +
         '<div class="cast-top">' +
         (portrait ? '<img class="cast-portrait" data-cast="' + esc(c.id) + '" src="' + portrait +
-          '" alt="' + esc(c.name) + '" loading="lazy">' : '') +
+          '" alt="' + esc(shownName) + '" loading="lazy">' : '') +
         '<div class="cast-info">' +
         '<button class="cast-head" data-cast="' + esc(c.id) + '" aria-expanded="' + isOpen + '">' +
-        '<span class="cast-name">' + esc(c.name) + '</span>' +
-        '<span class="cast-role">' + esc(c.role) + '</span>' +
-        '<span class="cast-aff">' + rec.affinity + '</span></button>' +
-        '<div class="cast-sub">' + esc(c.meta) + '</div>' +
+        '<span class="cast-name">' + esc(shownName) + '</span>' +
+        '<span class="cast-role">' + esc(known ? c.role : 'not introduced yet') + '</span>' +
+        '<span class="cast-aff">' + (known ? rec.affinity : '—') + '</span></button>' +
+        '<div class="cast-sub">' + esc(known ? c.meta : 'You have never spoken to her.') + '</div>' +
         '<div class="aff-track"><div class="aff-fill" style="width:' + rec.affinity + '%"></div></div>' +
         '<div class="cast-strip"><span class="tier">' + esc(tierOf(rec.affinity)) + '</span>' +
         (rotaHas(c, dayIndex(), state.slot, state.location) ? '<span class="week-here">here now</span>' : '') +
-        '<span>' + (isOpen ? 'tap to close' : 'tap for her week') + '</span></div>' +
+        '<span>' + (isOpen ? 'close the file' : 'open the file') + '</span></div>' +
         '</div></div>' +
         '<p class="cast-desc">' + esc(c.anchors) + '</p>' +
         '<div class="cast-body">' +
-        '<div class="cast-meta"><b>Week</b><span class="week">' + rotaRows(c).map(function (r) {
+        '<div class="cast-meta"><b>Week</b><span class="week">' + ((known || rec.sightings >= 2) ? rotaRows(c).map(function (r) {
           return '<span class="week-row"><b>' + esc(shortDay(r.day)) + '</b><span>' + esc(r.bits) + '</span></span>';
-        }).join('') + '</span>' +
+        }).join('') : '<span class="week-row"><span>Only what you have seen so far.</span></span>') + '</span>' +
         '<b>Memory</b><span>' + rec.memories.length + ' note' + (rec.memories.length === 1 ? '' : 's') + '</span></div>' +
         '<div class="mem-label">Accumulated memory</div>' + mems +
+        dossierHTML(c.id) +
         '</div></div>';
     }).join('');
+    if (sheet && sheet.classList.contains('open')) sheet.scrollTop = keepScroll;
   }
 
   /* =========================================================
      CLOCK
      ========================================================= */
   var SLOT_START = { Morning: 450, Afternoon: 790, Evening: 1060, Night: 1270 };
+  var MINUTES_PER_BEAT = 20;
 
-  function clockText() {
-    var m = (SLOT_START[state.slot] || 450) + (state.beats || 0) * 20;
+  function fmtClock(m) {
     var h = Math.floor(m / 60) % 24;
     var mm = m % 60;
     var suffix = h >= 12 ? 'pm' : 'am';
@@ -2036,19 +2882,78 @@
     return h12 + ':' + (mm < 10 ? '0' + mm : mm) + suffix;
   }
 
+  function clockText() {
+    /* the clock stops at the end of the slot; he can stay past it */
+    return fmtClock((SLOT_START[state.slot] || 450) + Math.min(state.beats || 0, BEATS_PER_SLOT) * MINUTES_PER_BEAT);
+  }
+
+  /* a beat saved before turns carried a clock still gets a plausible hour */
+  function turnClock(t) {
+    if (t && t.clock) return t.clock;
+    return fmtClock(SLOT_START[(t && t.slot) || state.slot] || 450);
+  }
+
+  function firstName(n) {
+    var s = String(n || '').replace(/^(Ms\.|Mr\.|Mrs\.|Dr\.)\s*/i, '').trim();
+    return s.split(/\s+/)[0] || s;
+  }
+
+  function countWord(n) {
+    return n === 1 ? 'once' : (n === 2 ? 'twice' : n + ' times');
+  }
+
   /* =========================================================
      SOUND — room tone generated on the fly, no audio files
      ========================================================= */
   var SOUND_KEY = 'dossier.sound';
   var audio = { ctx: null, master: null, on: false, layer: null, layerKey: null, noise: null };
 
+  /* One recipe per place: two noise voices shaped by filters and slow wobbles,
+     plus sparse one-shots so the room keeps making small decisions instead of
+     hissing politely. bands: f freq, q, g gain, lfo [hz, depth], trem [hz, depth]. */
   var AMBIENCE = {
-    college: { freq: 240, q: 1.1, gain: 0.055, lfo: 0.55, depth: 70 },
-    court: { freq: 1100, q: 0.6, gain: 0.05, lfo: 0.22, depth: 320 },
-    mall: { freq: 560, q: 0.5, gain: 0.07, lfo: 0.14, depth: 260 },
-    library: { freq: 2600, q: 0.7, gain: 0.04, lfo: 0.1, depth: 120 },
-    walkway: { freq: 760, q: 0.6, gain: 0.06, lfo: 0.3, depth: 300 },
-    condo: { freq: 130, q: 0.9, gain: 0.05, lfo: 0.4, depth: 35 }
+    college: {
+      bands: [
+        { f: 232, q: 1.0, g: 0.05, lfo: [0.52, 55], trem: [0.7, 0.45] },   /* wall fan wobble */
+        { f: 610, q: 0.6, g: 0.028, lfo: [0.19, 90], trem: [0.31, 0.6] }   /* lecture room murmur */
+      ],
+      events: ['rustle', 'rustle', 'chair', 'lecture']
+    },
+    court: {
+      bands: [
+        { f: 1500, q: 0.45, g: 0.042, lfo: [0.17, 380], trem: [0.11, 0.4] }, /* dead open air */
+        { f: 300, q: 0.8, g: 0.026, lfo: [0.27, 40], trem: [0.46, 0.35] }
+      ],
+      events: ['step', 'step', 'step', 'whistle']
+    },
+    mall: {
+      bands: [
+        { f: 520, q: 0.4, g: 0.055, lfo: [0.13, 240], trem: [0.21, 0.5] },  /* crowd wash */
+        { f: 2100, q: 0.6, g: 0.02, lfo: [0.09, 280], trem: [0.34, 0.3] }   /* retail hiss */
+      ],
+      events: ['chatter', 'chatter', 'tray', 'fridge']
+    },
+    library: {
+      bands: [
+        { f: 3100, q: 0.45, g: 0.03, lfo: [0.06, 150], trem: [0.08, 0.3] }, /* aircon hiss */
+        { f: 145, q: 0.9, g: 0.032, lfo: [0.08, 18], trem: [0.05, 0.25] }
+      ],
+      events: ['page', 'page', 'chair']
+    },
+    walkway: {
+      bands: [
+        { f: 820, q: 0.35, g: 0.05, lfo: [0.15, 320], trem: [0.12, 0.6] },  /* breeze between pillars */
+        { f: 235, q: 0.7, g: 0.028, lfo: [0.23, 55], trem: [0.29, 0.4] }
+      ],
+      events: ['slipper', 'slipper', 'bird', 'crowd']
+    },
+    condo: {
+      bands: [
+        { f: 118, q: 0.9, g: 0.04, lfo: [0.28, 16], trem: [0.2, 0.3] },    /* corridor hum */
+        { f: 880, q: 2.4, g: 0.022, lfo: [0.11, 110], trem: [0.38, 0.55] }  /* television through a door */
+      ],
+      events: ['tv', 'tv', 'door', 'slipper']
+    }
   };
 
   function soundWanted() {
@@ -2093,14 +2998,133 @@
     var l = audio.layer;
     audio.layer = null;
     audio.layerKey = null;
+    clearTimeout(l.timer);
     var t = audio.ctx.currentTime;
-    try {
-      l.gain.gain.cancelScheduledValues(t);
-      l.gain.gain.setValueAtTime(Math.max(0.0001, l.gain.gain.value), t);
-      l.gain.gain.linearRampToValueAtTime(0, t + 0.45);
-      l.src.stop(t + 0.55);
-      l.lfo.stop(t + 0.55);
-    } catch (e) { /* already stopped */ }
+    l.gains.forEach(function (g) {
+      try {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), t);
+        g.gain.linearRampToValueAtTime(0, t + 0.45);
+      } catch (e) { /* already gone */ }
+    });
+    l.srcs.concat(l.oscs).forEach(function (n) {
+      try { n.stop(t + 0.55); } catch (e) { /* already stopped */ }
+    });
+  }
+
+  /* one filtered noise strike: a footfall, a page, a tray, a shutter */
+  function burst(o) {
+    var ctx = audio.ctx;
+    var t = o.at || ctx.currentTime + 0.02;
+    var dur = o.dur || 0.12;
+    var src = ctx.createBufferSource();
+    src.buffer = audio.noise;
+    src.playbackRate.value = o.rate || 1;
+    var f = ctx.createBiquadFilter();
+    f.type = o.type || 'bandpass';
+    f.frequency.setValueAtTime(o.freq || 800, t);
+    if (o.freqTo) f.frequency.exponentialRampToValueAtTime(o.freqTo, t + dur);
+    f.Q.value = o.q == null ? 1 : o.q;
+    var g = ctx.createGain();
+    var peak = o.peak == null ? 0.05 : o.peak;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + Math.min(0.03, dur * 0.25));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f);
+    f.connect(g);
+    g.connect(audio.master);
+    src.start(t, Math.random() * 1.6);
+    src.stop(t + dur + 0.05);
+  }
+
+  /* one shaped tone: a whistle, a fridge, a lifted chair leg */
+  function tone(o) {
+    var ctx = audio.ctx;
+    var t = o.at || ctx.currentTime + 0.02;
+    var dur = o.dur || 0.2;
+    var osc = ctx.createOscillator();
+    osc.type = o.type || 'sine';
+    osc.frequency.setValueAtTime(o.freq, t);
+    if (o.freqTo) osc.frequency.exponentialRampToValueAtTime(o.freqTo, t + dur);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(o.peak == null ? 0.02 : o.peak, t + dur * 0.2);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g);
+    g.connect(audio.master);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+
+  /* the things that happen in a room on their own */
+  function playEvent(name) {
+    if (!audio.on || !audio.ctx || !audio.master) return;
+    var t = audio.ctx.currentTime + 0.05;
+    switch (name) {
+      case 'whistle':
+        tone({ at: t, freq: 2150, freqTo: 2400, dur: 0.22, peak: 0.026 });
+        tone({ at: t + 0.26, freq: 2400, freqTo: 2260, dur: 0.16, peak: 0.018 });
+        break;
+      case 'step': /* shoes on concrete */
+        for (var i = 0; i < 3; i++) {
+          burst({ at: t + i * 0.42, dur: 0.09, type: 'lowpass', freq: 340, q: 0.8, peak: 0.05, rate: 0.9 });
+        }
+        break;
+      case 'page':
+        burst({ at: t, dur: 0.13, type: 'highpass', freq: 1800, q: 0.7, peak: 0.05 });
+        break;
+      case 'chair':
+        tone({ at: t, freq: 78, freqTo: 52, dur: 0.18, peak: 0.03 });
+        burst({ at: t, dur: 0.16, freq: 900, q: 1.4, peak: 0.022 });
+        break;
+      case 'rustle':
+        burst({ at: t, dur: 0.3, freq: 1200, q: 0.9, peak: 0.026 });
+        break;
+      case 'lecture': /* a voice two rows away, words rounded off */
+        burst({ at: t, dur: 0.7, freq: 560, q: 3.2, peak: 0.03 });
+        burst({ at: t + 0.5, dur: 0.5, freq: 430, q: 3.6, peak: 0.022 });
+        break;
+      case 'chatter':
+        burst({ at: t, dur: 0.6, freq: 700, q: 1.6, peak: 0.03 });
+        burst({ at: t + 0.24, dur: 0.4, freq: 1050, q: 2.2, peak: 0.02 });
+        break;
+      case 'tray':
+        tone({ at: t, freq: 1450, freqTo: 1180, dur: 0.1, peak: 0.018 });
+        break;
+      case 'fridge':
+        tone({ at: t, freq: 62, freqTo: 58, dur: 0.9, peak: 0.024 });
+        break;
+      case 'tv':
+        burst({ at: t, dur: 0.55, freq: 760, q: 4.5, peak: 0.03 });
+        burst({ at: t + 0.7, dur: 0.42, freq: 620, q: 5, peak: 0.024 });
+        tone({ at: t, freq: 58, freqTo: 56, dur: 1.2, peak: 0.014 });
+        break;
+      case 'door':
+        tone({ at: t, freq: 96, freqTo: 64, dur: 0.22, peak: 0.032 });
+        burst({ at: t, dur: 0.2, type: 'lowpass', freq: 500, q: 0.7, peak: 0.028 });
+        break;
+      case 'slipper':
+        burst({ at: t, dur: 0.07, freq: 1400, q: 1.1, peak: 0.032 });
+        burst({ at: t + 0.3, dur: 0.07, freq: 1250, q: 1.1, peak: 0.028 });
+        break;
+      case 'bird':
+        tone({ at: t, freq: 2300, freqTo: 3000, dur: 0.08, peak: 0.015 });
+        tone({ at: t + 0.11, freq: 2700, freqTo: 2450, dur: 0.07, peak: 0.011 });
+        break;
+      case 'crowd':
+        burst({ at: t, dur: 1.1, freq: 480, q: 0.7, peak: 0.032 });
+        break;
+    }
+  }
+
+  function scheduleEvent(events, delay) {
+    if (!audio.on || !audio.ctx || !audio.layer || !events || !events.length) return;
+    clearTimeout(audio.layer.timer);
+    audio.layer.timer = setTimeout(function () {
+      if (!audio.on || !audio.layer) return;
+      playEvent(events[Math.floor(Math.random() * events.length)]);
+      scheduleEvent(events, 3200 + Math.random() * 6500);
+    }, delay);
   }
 
   function startLayer() {
@@ -2111,34 +3135,54 @@
     if (!ctx) return;
     stopLayer();
     var def = AMBIENCE[state.location] || AMBIENCE.college;
-    var damp = state.slot === 'Night' ? 0.55 : (state.slot === 'Evening' ? 0.75 : 1);
+    var damp = state.slot === 'Night' ? 0.5 : (state.slot === 'Evening' ? 0.75 : 1);
+    var layer = { srcs: [], oscs: [], gains: [], timer: null };
+    var t0 = ctx.currentTime;
 
-    var src = ctx.createBufferSource();
-    src.buffer = audio.noise;
-    src.loop = true;
-    var bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = def.freq;
-    bp.Q.value = def.q;
-    var g = ctx.createGain();
-    g.gain.value = 0;
-    src.connect(bp);
-    bp.connect(g);
-    g.connect(audio.master);
+    def.bands.forEach(function (b, i) {
+      var src = ctx.createBufferSource();
+      src.buffer = audio.noise;
+      src.loop = true;
+      src.playbackRate.value = 0.9 + i * 0.07;
+      var bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = b.f;
+      bp.Q.value = b.q;
+      var g = ctx.createGain();
+      g.gain.value = 0.0001;
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(audio.master);
 
-    var lfo = ctx.createOscillator();
-    lfo.frequency.value = def.lfo;
-    var lg = ctx.createGain();
-    lg.gain.value = def.depth;
-    lfo.connect(lg);
-    lg.connect(bp.frequency);
+      var lfo = ctx.createOscillator();
+      lfo.frequency.value = b.lfo[0];
+      var lg = ctx.createGain();
+      lg.gain.value = b.lfo[1];
+      lfo.connect(lg);
+      lg.connect(bp.frequency);
 
-    src.start();
-    lfo.start();
-    g.gain.linearRampToValueAtTime(def.gain * damp, ctx.currentTime + 1.4);
+      /* slow amplitude wander — the fan's wobble, the crowd's swells */
+      var trem = ctx.createOscillator();
+      trem.frequency.value = b.trem[0];
+      var tg = ctx.createGain();
+      tg.gain.value = b.g * b.trem[1];
+      trem.connect(tg);
+      tg.connect(g.gain);
 
-    audio.layer = { src: src, lfo: lfo, gain: g };
+      src.start(t0 + i * 0.06);
+      lfo.start(t0);
+      trem.start(t0);
+      g.gain.linearRampToValueAtTime(b.g * damp, t0 + 1.6);
+
+      layer.srcs.push(src);
+      layer.oscs.push(lfo);
+      layer.oscs.push(trem);
+      layer.gains.push(g);
+    });
+
+    audio.layer = layer;
     audio.layerKey = key;
+    scheduleEvent(def.events, 1600 + Math.random() * 1800);
   }
 
   function setSound(on, quiet) {
@@ -2194,7 +3238,6 @@
      ========================================================= */
   function doChoice(index) {
     if (busy || cutting) return;
-    if ((state.beats || 0) >= BEATS_PER_SLOT) { notify('The slot is spent — advance time'); return; }
     var t = lastTurn();
     if (!t || !t.choices || !t.choices[index]) return;
     var c = t.choices[index];
@@ -2233,6 +3276,7 @@
         mode: t.mode,
         forced: t.mode,
         messages: state.lastRequest.messages,
+        candidate: pendingReveal,
         noBeat: true
       });
       notify('Rerolled at ' + temp.toFixed(2));
@@ -2247,7 +3291,6 @@
 
   function travelTo(loc) {
     if (busy || cutting || !LOCATIONS[loc] || loc === state.location) return;
-    if ((state.beats || 0) >= BEATS_PER_SLOT) { notify('The slot is spent — advance time first'); return; }
     var nm = LOCATIONS[loc].name;
     cutting = true;
     sceneCut(nm, function () {
@@ -2361,15 +3404,53 @@
     toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2500);
   }
 
+  var modalReturn = null;
   function openModal(id) {
     var m = document.getElementById(id);
+    if (!m) return;
+    /* remember where the reader was, so closing puts the caret back */
+    if (!document.querySelector('.modal.open')) modalReturn = document.activeElement;
     m.classList.add('open');
     m.setAttribute('aria-hidden', 'false');
+    var first = m.querySelector('.modal-head .x');
+    if (first) setTimeout(function () { try { first.focus(); } catch (e) { /* ignore */ } }, 0);
   }
   function closeModal(id) {
     var m = document.getElementById(id);
+    if (!m) return;
+    var wasOpen = m.classList.contains('open');
     m.classList.remove('open');
     m.setAttribute('aria-hidden', 'true');
+    if (wasOpen && !document.querySelector('.modal.open') && modalReturn && modalReturn.focus) {
+      try { modalReturn.focus(); } catch (e) { /* ignore */ }
+      modalReturn = null;
+    }
+  }
+
+  function fmtWhen(ms) {
+    var d = new Date(ms || Date.now());
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' +
+      d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* The recent-activity list: newest first, one row per call. */
+  function renderActivity() {
+    var box = document.getElementById('activityList');
+    if (!box) return;
+    var list = (state.activity || []).slice(-4).reverse();
+    if (!list.length) { box.innerHTML = ''; return; }
+    box.innerHTML = list.map(function (a) {
+      var right = a.cost != null ? '$' + Number(a.cost).toFixed(6)
+        : (a.total ? compactTokens(a.total) + ' tok' : '—');
+      var chip = a.status === 'ok' ? 'Charged'
+        : (a.status === 'offline' ? 'No network' : 'Failed');
+      return '<div class="act-row">' +
+        '<div class="act-top"><span class="act-model">' + esc(a.model || 'unknown model') + '</span>' +
+        '<span class="act-cost">' + esc(right) + '</span></div>' +
+        '<div class="act-sub"><span>' + esc(fmtWhen(a.at)) + '</span>' +
+        '<span class="act-chip' + (a.status === 'ok' ? '' : ' bad') + '">' + esc(chip) + '</span></div>' +
+        '</div>';
+    }).join('');
   }
 
   function openSettings() {
@@ -2380,6 +3461,12 @@
     document.getElementById('tempRange').value = state.temperature;
     document.getElementById('tempVal').textContent = Number(state.temperature).toFixed(2);
     document.getElementById('presetModelHint').textContent = 'Active: ' + currentModel();
+    var usageEl = document.getElementById('usageLine');
+    if (usageEl) {
+      usageEl.innerHTML = esc(usageText()) +
+        ' · <a href="https://www.tokenreply.com/docs/recharge" target="_blank" rel="noopener noreferrer">wallet &amp; balance ↗</a>';
+    }
+    renderActivity();
     openModal('settingsModal');
     setTimeout(function () { document.getElementById('apiKeyInput').focus(); }, 30);
   }
@@ -2421,7 +3508,7 @@
     document.getElementById('placePill').addEventListener('click', function () {
       var here = scheduledHere();
       notify(LOCATIONS[state.location].name + ' — ' + (here.length
-        ? here.map(function (c) { return c.name.split(' ')[0]; }).join(', ')
+        ? here.map(function (c) { return isKnown(c.id) ? firstName(c.name) : c.epithet; }).join(', ')
         : 'nobody scheduled here right now'));
     });
     document.getElementById('advanceBtn').addEventListener('click', advanceTime);
