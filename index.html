@@ -1,0 +1,2525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Dossier</title>
+<style>
+  :root{
+    --bg:#13100C;
+    --bg-2:#191410;
+    --panel:#1D1712;
+    --card:#251E17;
+    --ink:#F1E7D7;
+    --ink-2:#BEAD98;
+    --ink-3:#8B7B68;
+    --line:rgba(241,231,215,.13);
+    --line-soft:rgba(241,231,215,.07);
+    --accent:#D99A5B;
+    --accent-deep:#B9793B;
+    --sage:#93A585;
+    --serif:'Iowan Old Style',Georgia,'Palatino Linotype','Book Antiqua',serif;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    --mono:ui-monospace,'Cascadia Mono','Segoe UI Mono',Menlo,Consolas,monospace;
+    --shadow:0 26px 60px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg)}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;
+    height:100vh;overflow:hidden;display:flex;flex-direction:column;
+    background:transparent;-webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:'';position:fixed;inset:-8%;z-index:-2;
+    background-image:var(--scene-img,none);
+    background-size:cover;background-position:center;
+    filter:blur(52px) saturate(.85) brightness(.5);
+    opacity:.4;
+  }
+  body::after{
+    content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(85% 65% at 24% 0%,rgba(217,154,91,.12),rgba(19,16,12,0) 62%),
+      linear-gradient(180deg,rgba(19,16,12,.5),rgba(19,16,12,.88) 70%,#13100C);
+  }
+  ::selection{background:rgba(217,154,91,.28)}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(241,231,215,.16);border-radius:9px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(241,231,215,.28)}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
+    padding:10px 22px 8px;flex:0 0 auto;
+  }
+  .brand{display:flex;flex-direction:column;line-height:1.1}
+  .brand h1{
+    font-family:var(--serif);font-weight:400;font-size:21px;margin:0;
+    color:var(--ink);letter-spacing:.005em;
+  }
+  .brand span{
+    font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-3);margin-top:4px;
+  }
+  .where{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;
+    background:rgba(37,30,23,.85);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px;font-size:12px;color:var(--ink-2);
+    white-space:nowrap;
+  }
+  .pill.mode .dot{width:6px;height:6px;border-radius:50%;background:var(--sage)}
+  .pill.mode.int{color:var(--accent)}
+  .pill.mode.int .dot{background:var(--accent)}
+  .pill.mode.int .dot{animation:dotPulse 2.6s ease-in-out infinite}
+  @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(217,154,91,.45)}50%{box-shadow:0 0 0 5px rgba(217,154,91,0)}}
+  .pick{position:relative;display:inline-flex}
+  .pick::after{
+    content:'';position:absolute;right:12px;top:50%;width:5px;height:5px;
+    border-right:1.5px solid var(--ink-3);border-bottom:1.5px solid var(--ink-3);
+    transform:translateY(-72%) rotate(45deg);pointer-events:none;
+  }
+  select{
+    appearance:none;-webkit-appearance:none;
+    background:rgba(37,30,23,.85);border:1px solid var(--line);border-radius:999px;
+    padding:6px 30px 6px 14px;font-family:var(--sans);font-size:12.5px;
+    color:var(--ink-2);cursor:pointer;max-width:220px;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  select:hover{background:var(--card);color:var(--ink);border-color:rgba(241,231,215,.26)}
+  select:focus-visible{outline:none;border-color:rgba(217,154,91,.65)}
+  .tools{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .btn{
+    background:rgba(37,30,23,.85);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;font-family:var(--sans);font-size:12px;color:var(--ink-2);
+    cursor:pointer;white-space:nowrap;
+    transition:background .15s,border-color .15s,color .15s,transform .15s;
+  }
+  .btn:hover{background:var(--card);color:var(--ink);border-color:rgba(217,154,91,.5);transform:translateY(-1px)}
+  .btn:focus-visible{outline:none;border-color:rgba(217,154,91,.65)}
+  .btn:active{transform:translateY(0) scale(.97)}
+  .btn:disabled{opacity:.4;cursor:default;transform:none}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#1C130B;font-weight:500}
+  .btn.primary:hover{background:#E9AE70;border-color:#E9AE70;color:#1C130B}
+
+  /* ---------- workspace ---------- */
+  .workspace{
+    flex:1 1 auto;min-height:0;display:grid;
+    grid-template-columns:minmax(0,1fr) 410px;gap:16px;
+    padding:2px 22px 16px;
+  }
+  .stage-col{min-height:0;display:flex;align-items:center;justify-content:center}
+  .frame{
+    position:relative;overflow:hidden;border-radius:16px;
+    background:#0A0806;border:1px solid rgba(241,231,215,.11);
+    box-shadow:var(--shadow);isolation:isolate;
+    width:100%;height:100%;
+  }
+  .scene-layer{
+    position:absolute;inset:-22px;will-change:transform;
+    transform:translate3d(var(--px,0px),var(--py,0px),0);
+  }
+  .scene-zoom{
+    position:absolute;inset:0;transform:scale(var(--zoom,1));
+    transition:transform 1.1s cubic-bezier(.22,.61,.36,1);
+  }
+  .frame.zoom .scene-zoom{--zoom:1.05}
+  .stage-bg{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 46%;display:block;
+    opacity:0;transition:opacity .45s ease;
+    animation:sceneDrift 55s ease-in-out infinite alternate;
+  }
+  .stage-bg.ready{opacity:1}
+  @keyframes sceneDrift{from{transform:scale(1.015)}to{transform:scale(1.06)}}
+
+  /* time-of-day light, cross-faded when the slot changes */
+  .light{
+    position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;
+    transition:opacity 1s ease;mix-blend-mode:soft-light;
+  }
+  .light.on{opacity:1}
+  .l-morning{background:linear-gradient(205deg,rgba(255,216,160,.55),rgba(150,170,205,.28) 55%,rgba(255,190,120,.3))}
+  .l-afternoon{background:linear-gradient(200deg,rgba(255,232,195,.5),rgba(255,176,104,.32) 60%,rgba(110,126,160,.26))}
+  .l-evening{background:linear-gradient(205deg,rgba(255,160,90,.55),rgba(196,104,74,.34) 52%,rgba(72,62,110,.4))}
+  .l-night{background:linear-gradient(200deg,rgba(96,120,186,.42),rgba(26,38,76,.62))}
+
+  /* dust in the air */
+  .motes{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+  .mote{
+    position:absolute;border-radius:50%;background:rgba(255,240,218,.85);
+    box-shadow:0 0 6px rgba(255,220,170,.5);opacity:0;
+    animation-name:moteFloat;animation-timing-function:linear;animation-iteration-count:infinite;
+  }
+  @keyframes moteFloat{
+    0%{transform:translate3d(0,10px,0);opacity:0}
+    12%{opacity:.75}
+    80%{opacity:.45}
+    100%{transform:translate3d(18px,-130px,0);opacity:0}
+  }
+
+  .frame::after{
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      linear-gradient(to top,rgba(10,7,5,.55),rgba(10,7,5,0) 26%),
+      radial-gradient(120% 100% at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.35));
+  }
+  .actors{
+    position:absolute;inset:0;pointer-events:none;z-index:3;
+    transform:translate3d(calc(var(--px,0px) * .4),calc(var(--py,0px) * .4),0);
+  }
+  .actor{
+    position:absolute;bottom:0;
+    translate:-50% 0;
+    transform-origin:50% 100%;
+    animation:
+      actorFade .5s ease both,
+      actorSway calc(var(--dur,4.4s) * 1.9) ease-in-out var(--delay,0s) infinite;
+  }
+  .actor img{
+    display:block;height:100%;width:auto;
+    transform-origin:50% 100%;
+    filter:drop-shadow(0 6px 12px rgba(0,0,0,.4));
+    animation:actorBreathe var(--breath,5.4s) ease-in-out var(--delay,0s) infinite;
+    transition:filter .5s ease,opacity .55s ease;
+  }
+  /* the front bust sits over the side bust, so turning to face you is a fade
+     instead of an image being swapped out */
+  .actor .face.front{
+    position:absolute;left:50%;bottom:0;height:100%;
+    transform:translateX(-50%);opacity:0;
+  }
+  .actor.facing-front .face.front{opacity:1}
+  .actor.facing-front .face.side{opacity:0}
+  .actor.lead img{filter:brightness(1.05) drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+  .actor.aside img{filter:brightness(.84) drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+  .actor.flip .face.side{transform:scaleX(-1)}
+
+  /* ---------- scene cut ---------- */
+  .cut-wash{
+    position:absolute;inset:0;z-index:7;pointer-events:none;
+    background:#0A0806;opacity:0;transition:opacity .16s ease;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .frame.cutting .cut-wash{opacity:1}
+  .cut-name{
+    font-family:var(--serif);font-size:15px;letter-spacing:.1em;color:#EADCC8;
+    opacity:0;transform:translateY(5px);
+    transition:opacity .34s ease .1s,transform .34s ease .1s;
+  }
+  .frame.cutting .cut-name{opacity:.85;transform:none}
+
+  /* ---------- speaker plate ---------- */
+  .speaker{
+    position:absolute;right:12px;bottom:12px;z-index:5;
+    display:none;align-items:center;gap:9px;max-width:min(62%,310px);
+    padding:7px 13px 7px 7px;border-radius:999px;
+    background:rgba(18,13,9,.74);border:1px solid rgba(241,231,215,.2);
+    backdrop-filter:blur(9px);
+  }
+  .speaker.on{display:flex;animation:spIn .45s ease both}
+  @keyframes spIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .sp-face{
+    width:34px;height:34px;flex:0 0 auto;border-radius:50%;object-fit:cover;object-position:50% 12%;
+    border:1px solid rgba(241,231,215,.22);background:#15110D;
+  }
+  .sp-txt{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+  .sp-name{
+    font-family:var(--serif);font-size:12.5px;color:#F3E9D9;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sp-line{
+    font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  @keyframes actorFade{from{opacity:0}to{opacity:1}}
+  @keyframes actorSway{0%,100%{transform:rotate(-.45deg)}50%{transform:rotate(.45deg)}}
+  @keyframes actorBreathe{0%,100%{translate:0 0}50%{translate:0 -4px}}
+  .plate-cap{
+    position:absolute;left:14px;bottom:12px;z-index:4;
+    font-size:11.5px;color:#F3E9D9;letter-spacing:.03em;
+    background:rgba(18,13,9,.6);border:1px solid rgba(241,231,215,.18);
+    backdrop-filter:blur(8px);border-radius:999px;padding:6px 13px;
+  }
+  .inview{
+    position:absolute;right:12px;top:12px;z-index:4;
+    display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:70%;
+  }
+  .ichip{
+    font-size:11px;color:#EEE2D1;background:rgba(18,13,9,.66);
+    border:1px solid rgba(241,231,215,.16);border-radius:999px;padding:4px 11px;
+    backdrop-filter:blur(6px);
+  }
+
+  /* ---------- side panel ---------- */
+  .panel{
+    min-height:0;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#211A14,#191410 60%);
+    border:1px solid var(--line-soft);border-radius:16px;
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .feed{
+    flex:1 1 auto;min-height:140px;overflow-y:auto;padding:12px 16px 8px;
+    mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 100%);
+  }
+  .turn{padding:0 0 12px}
+  .turn + .turn{border-top:1px solid var(--line-soft);padding-top:12px}
+  .turn.fresh{animation:beatIn .5s cubic-bezier(.22,.61,.36,1) both}
+  .turn.fresh .scene p{animation:paraIn .55s ease both;animation-delay:calc(var(--i,0) * 70ms + 60ms)}
+  .turn.fresh .thoughts{animation:paraIn .6s ease both;animation-delay:.42s}
+  @keyframes beatIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes paraIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .tmeta{
+    font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin-bottom:8px;
+  }
+  .tmeta em{font-style:normal;color:var(--accent)}
+  .tact{font-size:12px;font-style:italic;color:var(--ink-2);margin-bottom:8px}
+  .tact i{font-style:normal;color:var(--accent);margin-right:6px}
+  .scene{
+    font-family:var(--serif);font-size:14px;line-height:1.58;color:var(--ink);
+    margin:0;
+  }
+  .scene p{margin:0 0 7px}
+  .scene p:last-child{margin-bottom:0}
+  .thoughts{
+    margin:8px 0 0;padding:1px 0 1px 10px;
+    border-left:2px solid rgba(217,154,91,.5);
+  }
+  .thoughts p{
+    margin:0;font-family:var(--serif);font-style:italic;font-size:13px;
+    line-height:1.5;color:var(--ink-2);
+  }
+  .feed-empty{
+    font-family:var(--serif);font-style:italic;font-size:14px;
+    color:var(--ink-3);padding:24px 0;
+  }
+  .earlier{
+    display:block;width:100%;text-align:left;background:none;border:0;
+    border-bottom:1px solid var(--line-soft);padding:0 0 11px;margin:0 0 14px;
+    font-family:var(--sans);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);cursor:pointer;transition:color .15s;
+  }
+  .earlier:hover{color:var(--accent)}
+
+  /* ---------- day break ---------- */
+  .day-sub{
+    font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-3);margin:0 0 12px;
+  }
+  .day-row{
+    display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+    padding:9px 0;border-top:1px solid var(--line-soft);
+    font-family:var(--serif);font-size:13.5px;color:var(--ink);
+  }
+  .day-row b{font-weight:400}
+  .day-row span{
+    font-family:var(--sans);font-size:10.5px;color:var(--ink-3);
+    text-align:right;flex:0 1 auto;
+  }
+  .day-empty{
+    font-family:var(--serif);font-style:italic;font-size:13px;
+    color:var(--ink-3);margin:0;
+  }
+
+  .dock{flex:0 0 auto;padding:0 12px 11px;border-top:1px solid var(--line-soft)}
+  .dock-status{
+    min-height:12px;text-align:right;padding:5px 2px 3px;
+    font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .dock-status.err{color:#E58A77}
+  .dock-status.busy{animation:statusPulse 1.6s ease-in-out infinite}
+  @keyframes statusPulse{0%,100%{opacity:.45}50%{opacity:1}}
+  .choices{display:grid;grid-template-columns:1fr;gap:5px}
+  .choice{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(241,231,215,.035);border:1px solid var(--line-soft);border-radius:9px;
+    padding:7px 11px;text-align:left;cursor:pointer;
+    font-family:var(--serif);font-size:13px;line-height:1.32;color:var(--ink);
+    transition:background .15s,border-color .15s,transform .15s;
+  }
+  .choice:hover{background:rgba(217,154,91,.1);border-color:rgba(217,154,91,.45);transform:translateY(-1px)}
+  .choice:hover .num{color:var(--accent)}
+  .choice:active{transform:translateY(0) scale(.99)}
+  .choice:focus-visible{outline:none;border-color:rgba(217,154,91,.65)}
+  .choice:disabled{opacity:.45;cursor:default;transform:none}
+  .choice .num{
+    font-family:var(--sans);font-size:10px;color:var(--ink-3);
+    flex:0 0 13px;text-align:center;
+  }
+  .steer{display:flex;align-items:center;gap:6px;margin-top:6px;padding:0 2px}
+  .steer input{
+    flex:1;min-width:0;background:transparent;border:0;
+    border-bottom:1px solid var(--line);padding:5px 2px;
+    font-family:var(--sans);font-size:12px;color:var(--ink);
+  }
+  .steer input::placeholder{color:var(--ink-3)}
+  .steer input:focus{outline:none;border-bottom-color:rgba(217,154,91,.65)}
+
+  /* ---------- campus map ---------- */
+  button.pill.place{
+    font-family:var(--sans);font-size:12px;color:var(--ink-2);cursor:pointer;
+    transition:border-color .15s,color .15s;
+  }
+  button.pill.place:hover{color:var(--ink);border-color:rgba(217,154,91,.5)}
+  .map-block{
+    flex:0 0 auto;padding:8px 12px 9px;border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,rgba(37,30,23,.5),rgba(29,23,18,0));
+  }
+  .map-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .map-title{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .map-sub{font-size:10px;color:var(--ink-3);margin-left:auto}
+  .beats{display:flex;gap:4px}
+  .beat{
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(241,231,215,.14);border:1px solid rgba(241,231,215,.2);
+    transition:background .2s,box-shadow .2s;
+  }
+  .beat.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px rgba(217,154,91,.55)}
+  .map-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .node{
+    position:relative;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
+    min-width:0;padding:5px 7px;border-radius:8px;text-align:left;cursor:pointer;
+    background:rgba(241,231,215,.03);border:1px solid var(--line-soft);color:var(--ink-2);
+    font-family:var(--sans);
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .node:hover{background:rgba(217,154,91,.1);border-color:rgba(217,154,91,.4);color:var(--ink)}
+  .node:focus-visible{outline:none;border-color:rgba(217,154,91,.65)}
+  .node:disabled{cursor:default;opacity:.5}
+  .node.here{border-color:rgba(217,154,91,.6);background:rgba(217,154,91,.11);color:var(--ink)}
+  .node.here::after{
+    content:'';position:absolute;right:7px;top:7px;width:5px;height:5px;border-radius:50%;
+    background:var(--accent);box-shadow:0 0 0 3px rgba(217,154,91,.16);
+  }
+  .n-name{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;max-width:100%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .n-dots{display:flex;gap:3px;min-height:11px;align-items:center}
+  .n-dots i{
+    font-style:normal;font-family:var(--mono);font-size:8px;line-height:1;
+    width:11px;height:11px;border-radius:50%;display:grid;place-items:center;
+    background:rgba(147,165,133,.26);color:#DEE7D6;border:1px solid rgba(147,165,133,.5);
+  }
+  .n-dots i.dead{background:rgba(241,231,215,.05);color:var(--ink-3);border-color:var(--line-soft)}
+  .n-dots .q{font-size:10px;color:var(--ink-3);letter-spacing:.08em}
+
+  /* ---------- cast cards ---------- */
+  .cast-card{border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  .cast-card:last-child{border-bottom:0;padding-bottom:0}
+  .cast-top{display:flex;gap:14px;padding:14px 0 0}
+  .cast-portrait{
+    width:94px;height:148px;flex:0 0 auto;object-fit:cover;object-position:50% 10%;
+    border-radius:10px;border:1px solid var(--line-soft);background:#15110D;
+    cursor:pointer;transition:border-color .15s ease;
+  }
+  .cast-portrait:hover{border-color:rgba(217,154,91,.5)}
+  .cast-info{flex:1 1 auto;min-width:0}
+  .cast-sub{font-size:11px;color:var(--ink-3);margin:0 0 7px}
+  .cast-desc{
+    font-family:var(--serif);font-size:12.5px;line-height:1.6;color:var(--ink-2);
+    margin:10px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .cast-card.open .cast-desc{display:block;-webkit-line-clamp:unset;overflow:visible}
+  .cast-head{
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;width:100%;
+    background:none;border:0;padding:0 0 4px;cursor:pointer;text-align:left;color:var(--ink);
+  }
+  .cast-head:hover .cast-name{color:var(--accent)}
+  .cast-name{font-family:var(--serif);font-size:15px;flex:0 0 auto}
+  .cast-role{font-size:11.5px;color:var(--ink-2);flex:1 1 100%;order:3;margin-top:2px;white-space:normal}
+  .cast-aff{font-family:var(--mono);font-size:11px;color:var(--ink-3);flex:0 0 auto;order:2;margin-left:auto}
+  .aff-track{height:4px;background:rgba(241,231,215,.09);border-radius:4px;overflow:hidden}
+  .aff-fill{height:4px;background:rgba(147,165,133,.9);border-radius:4px;width:0;transition:width .25s ease}
+  .cast-card.hot .aff-fill{background:var(--accent)}
+  .cast-strip{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:6px 0 0;font-size:11px;color:var(--ink-3);
+  }
+  .cast-strip .tier{color:var(--ink-2)}
+  .week{display:grid;gap:2px}
+  .week-row{display:grid;grid-template-columns:32px 1fr;gap:8px;font-size:11px;color:var(--ink-3);line-height:1.5}
+  .week-row b{font-weight:500;color:var(--ink-2)}
+  .week-here{color:var(--accent);font-size:10px;letter-spacing:.04em}
+  .choice.end{
+    justify-content:center;font-style:italic;color:var(--ink-2);
+    background:rgba(217,154,91,.09);border-color:rgba(217,154,91,.34);
+  }
+  .cast-body{padding:10px 0 4px;display:none}
+  .cast-card.open .cast-body{display:block}
+  .cast-meta{
+    display:grid;grid-template-columns:auto 1fr;gap:3px 10px;
+    font-size:11px;color:var(--ink-3);margin-bottom:10px;
+  }
+  .cast-meta b{color:var(--ink-2);font-weight:500}
+  .mem-label{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink-3);margin:10px 0 6px}
+  .mem{border-left:1px solid var(--line);padding-left:9px;margin-bottom:8px}
+  .mem .meta{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .mem .txt{font-family:var(--serif);font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+  .mem-empty{font-family:var(--serif);font-size:12.5px;font-style:italic;color:var(--ink-3)}
+  .colophon{padding:16px 0 18px;border-top:1px solid var(--line-soft);margin-top:6px}
+  .colophon .sig{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+  .colophon p{margin:0;font-family:var(--serif);font-size:12.5px;line-height:1.65;color:var(--ink-2)}
+
+  /* ---------- modal ---------- */
+  .modal{
+    position:fixed;inset:0;background:rgba(6,5,4,.66);backdrop-filter:blur(4px);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:56px 20px;z-index:60;overflow-y:auto;
+  }
+  .modal.open{display:flex}
+  .modal-card{
+    width:100%;max-width:520px;background:var(--panel);
+    border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+    color:var(--ink);
+  }
+  .modal-card.wide{max-width:600px}
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 20px;border-bottom:1px solid var(--line-soft);
+  }
+  .modal-head h2{margin:0;font-family:var(--serif);font-weight:400;font-size:17px;color:var(--ink)}
+  .modal-head .x{
+    background:none;border:0;color:var(--ink-3);font-size:19px;line-height:1;
+    cursor:pointer;padding:2px 6px;border-radius:8px;
+  }
+  .modal-head .x:hover{color:var(--ink);background:rgba(241,231,215,.06)}
+  .modal-body{padding:16px 20px 0}
+  .modal-body.flat{padding:4px 20px 8px}
+  .field{display:block;margin-bottom:15px}
+  .field .lbl{display:block;font-size:11.5px;color:var(--ink-2);margin-bottom:5px}
+  .field input[type=text],.field input[type=password],.field select{
+    width:100%;max-width:none;background:#15110D;border:1px solid var(--line);
+    border-radius:10px;color:var(--ink);font-family:var(--mono);font-size:12px;padding:9px 10px;
+  }
+  .field input:focus,.field select:focus{outline:none;border-color:rgba(217,154,91,.65)}
+  .field .hint{display:block;font-size:11px;color:var(--ink-3);margin-top:5px;line-height:1.45}
+  .temp-row{display:flex;align-items:center;gap:12px}
+  .temp-row input[type=range]{flex:1;accent-color:var(--accent);height:18px}
+  .temp-row .val{font-family:var(--mono);font-size:12px;color:var(--ink);min-width:38px;text-align:right}
+  .modal-foot{
+    display:flex;gap:10px;justify-content:flex-end;
+    padding:14px 20px;border-top:1px solid var(--line-soft);
+  }
+
+  #toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    background:#2A2118;border:1px solid rgba(217,154,91,.35);
+    color:#F3E9D9;border-radius:999px;padding:9px 16px;font-size:12px;
+    opacity:0;pointer-events:none;transition:opacity .18s ease;
+    z-index:90;max-width:80vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #toast.show{opacity:1}
+
+  @media (max-width:1200px){
+    .workspace{grid-template-columns:minmax(0,1fr) 350px;padding:2px 20px 18px}
+  }
+  @media (max-width:900px){
+    body{height:auto;overflow:auto}
+    .topbar{
+      position:sticky;top:0;z-index:20;padding:12px 14px 10px;flex-wrap:wrap;
+      background:rgba(19,16,12,.92);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line-soft);
+    }
+    .brand span{display:none}
+    .tools{margin-left:0;width:100%}
+    .workspace{grid-template-columns:1fr;gap:14px;padding:12px 12px 20px}
+    .stage-col{height:46vh;min-height:230px}
+    .panel{min-height:320px}
+    .feed{max-height:44vh}
+    .inview{max-width:58%}
+    .speaker{left:12px;right:auto;bottom:46px;max-width:calc(100% - 24px)}
+    .cut-name{font-size:13px}
+    .modal{padding:20px 12px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .stage-bg{animation:none}
+    .actor{animation:none}
+    .actor img{animation:none}
+    .mote{animation:none;opacity:.25}
+    .turn.fresh,.turn.fresh .scene p,.turn.fresh .thoughts{animation:none}
+    .pill.mode.int .dot,.dock-status.busy{animation:none}
+    .scene-zoom{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><h1>The Dossier</h1><span>narrated by Buffy</span></div>
+  <div class="where">
+    <span class="pill" id="dayBadge">Mon · Morning</span>
+    <button class="pill place" id="placePill" aria-label="Where you are"><span id="placeText">College Building</span></button>
+    <span class="pill mode" id="modePill"><span class="dot"></span><span id="modeText">observing</span></span>
+  </div>
+  <nav class="tools">
+    <button class="btn primary" id="advanceBtn">Advance time</button>
+    <button class="btn" id="castOpenBtn">Cast</button>
+    <button class="btn" id="exportBtn">Save</button>
+    <button class="btn" id="importBtn">Load</button>
+    <button class="btn" id="newRunBtn">Restart</button>
+    <button class="btn" id="soundBtn">Sound off</button>
+    <button class="btn" id="settingsBtn">API</button>
+  </nav>
+</header>
+
+<main class="workspace">
+  <section class="stage-col">
+    <div class="frame">
+      <div class="scene-layer">
+        <div class="scene-zoom">
+          <img class="stage-bg" id="stageBg" alt="Current scene" />
+        </div>
+      </div>
+      <div class="light l-morning" data-slot="morning"></div>
+      <div class="light l-afternoon" data-slot="afternoon"></div>
+      <div class="light l-evening" data-slot="evening"></div>
+      <div class="light l-night" data-slot="night"></div>
+      <div class="motes" id="motes" aria-hidden="true"></div>
+      <div class="actors" id="actors" aria-hidden="true"></div>
+      <div class="cut-wash" id="cutWash" aria-hidden="true"><span class="cut-name" id="cutName"></span></div>
+      <div class="speaker" id="speakerPlate" aria-hidden="true">
+        <img class="sp-face" id="speakerFace" alt="" />
+        <div class="sp-txt"><span class="sp-name" id="speakerName"></span><span class="sp-line" id="speakerLine"></span></div>
+      </div>
+      <div class="plate-cap" id="plateCap"></div>
+      <div class="inview" id="inView"></div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="map-block">
+      <div class="map-head">
+        <span class="map-title">Campus</span>
+        <span class="beats" id="beatPips" title="Beats left in this slot"></span>
+        <span class="map-sub" id="mapSub">Mon · Morning</span>
+      </div>
+      <div class="map-grid" id="mapGrid"></div>
+    </div>
+    <div class="feed" id="feed" aria-live="polite"></div>
+    <div class="dock">
+      <div class="dock-status" id="dockStatus"></div>
+      <div class="choices" id="choices"></div>
+      <div class="steer">
+        <input id="steerInput" type="text" placeholder="Steer the next beat…" autocomplete="off" />
+        <button class="btn" id="steerBtn">Steer</button>
+        <button class="btn" id="rerollBtn">Reroll</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="modal" id="castModal" aria-hidden="true">
+  <div class="modal-card wide" role="dialog" aria-modal="true" aria-labelledby="castTitle">
+    <div class="modal-head">
+      <h2 id="castTitle">Cast dossier</h2>
+      <button class="x" id="closeCast" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body flat" id="castList"></div>
+    <div class="modal-body flat">
+      <section class="colophon">
+        <div class="sig">narration by Buffy</div>
+        <p>I get the day, the slot, the place, the beats left in it and every affinity score in this dossier, and I write from that. The timetable is the only fixed thing — who is where is set by the week, not by what you want. Reroll me and I get the same payload with slightly more rope.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-head">
+      <h2 id="settingsTitle">API settings</h2>
+      <button class="x" id="closeSettings" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="lbl">TokenReply API key</span>
+        <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+        <span class="hint">Kept in this browser's localStorage. Sent only to api.tokenreply.com.</span>
+      </label>
+
+      <label class="field">
+        <span class="lbl">Model preset</span>
+        <select id="modelSelect"></select>
+        <span class="hint" id="presetModelHint"></span>
+      </label>
+
+      <label class="field">
+        <span class="lbl">Custom model override</span>
+        <input id="customModel" type="text" placeholder="vendor/model-name" autocomplete="off" spellcheck="false" />
+      </label>
+
+      <div class="field">
+        <span class="lbl">Temperature</span>
+        <div class="temp-row">
+          <input id="tempRange" type="range" min="0.5" max="1.15" step="0.01" value="0.85" />
+          <span class="val" id="tempVal">0.85</span>
+        </div>
+        <span class="hint">Reroll resends the identical payload at +0.12, capped at 1.15.</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="forgetKeyBtn">Forget key</button>
+      <button class="btn primary" id="saveSettings">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="dayModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
+    <div class="modal-head">
+      <h2 id="dayTitle">Monday ended.</h2>
+      <button class="x" id="closeDay" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="dayBody"></div>
+    <div class="modal-foot">
+      <button class="btn primary" id="dayGo">Continue</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept="application/json,.json" hidden />
+<div id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     CONSTANTS
+     ========================================================= */
+  var ENDPOINT = 'https://api.tokenreply.com/v1/chat/completions';
+  var STORE_KEY = 'dossier.state.v2';
+  var KEY_KEY = 'dossier.tokenreply.key';
+  var MODEL_PRESETS = [
+    'deepseek/deepseek-chat',
+    'zhipu/glm-4-plus',
+    'x-ai/grok-2',
+    'google/gemini-2.0-flash',
+    'nvidia/llama-3.1-nemotron-70b-instruct'
+  ];
+  var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  var SLOTS = ['Morning', 'Afternoon', 'Evening', 'Night'];
+  var TIER_TABLE = [[80, 'Intimate'], [60, 'Close'], [40, 'Familiar'], [20, 'Acquaintance'], [0, 'Stranger']];
+  var BEATS_PER_SLOT = 3;
+
+  var LOCATIONS = {
+    college: {
+      name: 'College Building',
+      desc: 'Cramped wooden armchairs in lecture rooms, wall fans that hum and wobble, cold aircon in the ComLab, narrow aisles where instructors lean over monitors, crowded stairwell landings.'
+    },
+    court: {
+      name: 'Open Court / Bleachers',
+      desc: 'Harsh afternoon sunlight off the concrete, shaded bleachers, a sideline water jug station, elevated vantage points looking down onto drills and stretches.'
+    },
+    mall: {
+      name: 'University Mall',
+      desc: 'Food court crowded with trays and noise, escalator railings, bright overhead retail lighting, student org registration booths, shops and the student center.'
+    },
+    library: {
+      name: 'Main Library',
+      desc: 'Quiet air-conditioned study tables, low-angle seating across the desks, narrow bookshelf aisles, a room kept chilly enough to make people fold their arms.'
+    },
+    walkway: {
+      name: 'University Walkway',
+      desc: 'Shaded concrete covered paths and the quadrangle, packed during class dismissal, sudden breezes between the pillars, uneven steps, students hurrying between buildings.'
+    },
+    condo: {
+      name: 'Condo / Apartment',
+      desc: 'A bright narrow hallway outside unit doors, the late-night laundry area at the end, and the convenience store aisles downstairs after hours.'
+    }
+  };
+  var LOCATION_ORDER = ['college', 'court', 'mall', 'library', 'walkway', 'condo'];
+  var SHORT_LOC = {
+    college: 'College', court: 'Court', mall: 'Mall',
+    library: 'Library', walkway: 'Walkway', condo: 'Condo'
+  };
+
+  var CAST = [
+    {
+      id: 'seatmate',
+      name: 'Bea Reyes',
+      role: 'The Tired Seatmate',
+      meta: '21 · 3rd-year blockmate · 5\u20323" · 34C\u201325\u201336',
+      rota: [
+        [0, 'Morning', 'college'], [0, 'Afternoon', 'college'],
+        [1, 'Morning', 'college'], [1, 'Afternoon', 'college'],
+        [2, 'Morning', 'college'], [2, 'Afternoon', 'college'],
+        [3, 'Morning', 'college'], [3, 'Afternoon', 'college'],
+        [4, 'Morning', 'college'], [4, 'Afternoon', 'mall'],
+        [5, 'Afternoon', 'mall']
+      ],
+      anchors: 'Runs on iced coffee and very little sleep. Thin white or light-grey org shirts that go faintly translucent under classroom fluorescent tubes, a dark bralette and its lace trim reading through the cotton. Worn denim short-shorts that ride up when she slouches. The collar of her oversized zip-up hoodie gaps open when she leans forward with her chin on the desk.',
+      pose: 'thin white org shirt gone faintly sheer under the tube light over a dark bralette, oversized zip hoodie half off one shoulder, worn denim short-shorts, slouched low with her chin on one palm'
+    },
+    {
+      id: 'ta',
+      name: 'Ms. Camille Mendoza',
+      role: 'The Strict Young Instructor',
+      meta: '24 · part-time ComLab lecturer · 5\u20326" · 34D\u201324\u201337',
+      rota: [
+        [0, 'Afternoon', 'college'], [0, 'Evening', 'library'], [0, 'Night', 'library'],
+        [1, 'Afternoon', 'college'],
+        [2, 'Afternoon', 'college'], [2, 'Evening', 'library'], [2, 'Night', 'library'],
+        [3, 'Afternoon', 'college'], [3, 'Evening', 'library'],
+        [4, 'Afternoon', 'college'],
+        [5, 'Morning', 'college']
+      ],
+      anchors: 'Fresh out of grad school, composed and sharp. Form-fitting sleeveless silk or chiffon blouses tucked hard into high-waisted pencil skirts; the thin stretch fabric pulls taut across her hips and shows the seam of her underwear whenever she crouches beside a workstation to read code. Top collar left unbuttoned, so leaning over a monitor shows the upper swell of her bust. Low, unhurried voice that makes the room go quiet.',
+      pose: 'ivory sleeveless chiffon blouse tucked into a charcoal pencil skirt, hair pinned up, crouched beside a workstation with one hand flat on the desk'
+    },
+    {
+      id: 'library',
+      name: 'Claire Villanueva',
+      role: 'The Quiet Library Regular',
+      meta: '20 · 3rd-year psych student · 5\u20322" · 32B\u201323\u201335',
+      rota: [
+        [0, 'Morning', 'library'],
+        [1, 'Morning', 'library'], [1, 'Afternoon', 'library'], [1, 'Evening', 'walkway'],
+        [2, 'Morning', 'library'],
+        [3, 'Afternoon', 'library'], [3, 'Evening', 'walkway'],
+        [4, 'Afternoon', 'library'], [4, 'Evening', 'walkway'],
+        [5, 'Afternoon', 'library'], [5, 'Evening', 'library'],
+        [6, 'Morning', 'library'], [6, 'Afternoon', 'library']
+      ],
+      anchors: 'Petite up top, wide hips, pale skin, claims the corner desk by the aircon vent with wired earphones tucked under her hair. Cropped knit cardigan over a tight ribbed camisole, no padding, so the cold aircon reads straight through the knit. Pleated mini-skirt that climbs her thighs when she crosses her legs under the table; shifting or reaching for a dropped pen gives a brief glimpse of dark cotton or lace under the pleats. Speaks so softly you have to lean in.',
+      pose: 'cropped oatmeal knit cardigan over a tight ribbed camisole, pleated navy mini-skirt, legs crossed under the desk, one earphone in'
+    },
+    {
+      id: 'neighbor',
+      name: 'Trixie Soriano',
+      role: 'The Condo Neighbour',
+      meta: '21 · 4th-year design student · 5\u20324" · 35D\u201325\u201338',
+      rota: [
+        [0, 'Evening', 'condo'], [0, 'Night', 'condo'],
+        [1, 'Evening', 'mall'], [1, 'Night', 'condo'],
+        [2, 'Evening', 'condo'], [2, 'Night', 'condo'],
+        [3, 'Evening', 'mall'], [3, 'Night', 'condo'],
+        [4, 'Evening', 'condo'], [4, 'Night', 'condo'],
+        [5, 'Afternoon', 'mall'], [5, 'Evening', 'condo'], [5, 'Night', 'condo'],
+        [6, 'Morning', 'mall'], [6, 'Afternoon', 'mall'], [6, 'Evening', 'condo'], [6, 'Night', 'condo']
+      ],
+      anchors: 'Never bothers with a bra for the hallway run at night — deliveries, laundry, the store downstairs. Thin oversized cotton tees that move with her as she walks, paired with ultra-short dolphin shorts in thin jersey that follow every line of her hips under the bright hallway fluorescents. Carries a laundry basket on one hip like it weighs nothing, hair up in a claw clip, entirely unbothered by being seen.',
+      pose: 'oversized washed-black cotton tee, grey dolphin shorts in thin jersey, hair twisted up in a claw clip, laundry basket balanced on one hip'
+    },
+    {
+      id: 'athlete',
+      name: 'Kyla Dizon',
+      role: 'The Open-Court Athlete',
+      meta: '19 · 1st-year varsity (volleyball / track) · 5\u20327" · 33C\u201324\u201337',
+      rota: [
+        [0, 'Morning', 'court'],
+        [1, 'Afternoon', 'court'],
+        [2, 'Morning', 'court'],
+        [3, 'Morning', 'court'], [3, 'Afternoon', 'court'],
+        [4, 'Morning', 'court'],
+        [5, 'Morning', 'court'], [5, 'Afternoon', 'court'],
+        [6, 'Afternoon', 'court']
+      ],
+      anchors: 'Toned, athletic, sun-kissed, defined abs, firm glutes. Practices in a tight dri-fit racerback tank soaked through at the chest and spine, clinging like a second skin. Compression spandex shorts that map every contour, the seamless thong line unmistakable at the back and the front silhouette clear, especially when she bends forward with her hands on her knees catching her breath by the bleachers. Loud, easy laugh that carries across the court.',
+      pose: 'soaked maroon dri-fit racerback, black compression shorts, hair in a high ponytail, hands on her knees at the base of the bleachers'
+    },
+    {
+      id: 'event_girl',
+      name: 'Cheska Lim',
+      role: 'The Campus Event Organiser',
+      meta: '20 · 2nd-year student council officer · 5\u20325" · 34C\u201324\u201336',
+      rota: [
+        [0, 'Afternoon', 'walkway'],
+        [1, 'Morning', 'walkway'],
+        [2, 'Afternoon', 'mall'],
+        [3, 'Morning', 'walkway'],
+        [4, 'Morning', 'walkway'], [4, 'Afternoon', 'mall'], [4, 'Night', 'mall'],
+        [5, 'Morning', 'mall'], [5, 'Afternoon', 'mall']
+      ],
+      anchors: 'Dresses noticeably bolder than class attire: fitted off-shoulder crop tops baring midriff and shoulders, high-waisted bodycon mini-skirts or thin linen shorts. Leaning across an org registration table pulls the neckline forward and the skirt taut across her hips, the lace pattern of her underwear reading clearly through the fabric. Talks with her hands, a lanyard swinging, clipboard tucked under one arm.',
+      pose: 'cream off-shoulder ribbed crop top, high-waisted olive bodycon mini-skirt, lanyard, leaning across a registration table mid-sentence'
+    }
+  ];
+  var CAST_BY_ID = {};
+  CAST.forEach(function (c) { CAST_BY_ID[c.id] = c; });
+
+  var TYPE_TAGS = { observe: 'observe', angle: 'angle', approach: 'approach', reset: 'low-key' };
+  var FALLBACK_LABELS = [
+    'Keep watching from where I am.',
+    'Shift my angle for a better line of sight.',
+    'Close the distance and say something.',
+    'Stay low-key and let the moment pass.'
+  ];
+
+  /* =========================================================
+     STATE
+     ========================================================= */
+  var busy = false;
+  var openCast = {};
+
+  function freshCast() {
+    var out = {};
+    CAST.forEach(function (c) { out[c.id] = { affinity: 0, memories: [] }; });
+    return out;
+  }
+
+  function defaultState() {
+    return {
+      version: 2,
+      day: 'Monday',
+      slot: 'Morning',
+      location: 'college',
+      mode: 'OBSERVATION',
+      model: MODEL_PRESETS[0],
+      customModel: '',
+      temperature: 0.85,
+      beats: 0,
+      history: [],
+      cast: freshCast(),
+      inView: [],
+      lastRequest: null
+    };
+  }
+
+  var state = defaultState();
+
+  function clone(v) { return JSON.parse(JSON.stringify(v)); }
+  function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+  function tierOf(a) {
+    for (var i = 0; i < TIER_TABLE.length; i++) { if (a >= TIER_TABLE[i][0]) return TIER_TABLE[i][1]; }
+    return 'Stranger';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+  function shortDay(d) {
+    var s = String(d || '').slice(0, 3);
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
+
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+    catch (e) { notify('Autosave failed'); }
+  }
+
+  function load() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORE_KEY); } catch (e) { raw = null; }
+    if (!raw) return false;
+    try {
+      state = normalizeSave(JSON.parse(raw));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function normalizeSave(obj) {
+    var s = defaultState();
+    if (!obj || typeof obj !== 'object') return s;
+    if (DAYS.indexOf(obj.day) >= 0) s.day = obj.day;
+    if (SLOTS.indexOf(obj.slot) >= 0) s.slot = obj.slot;
+    if (LOCATIONS[obj.location]) s.location = obj.location;
+    if (obj.mode === 'INTERACTION' || obj.mode === 'OBSERVATION') s.mode = obj.mode;
+    if (typeof obj.model === 'string' && obj.model) s.model = obj.model;
+    if (typeof obj.customModel === 'string') s.customModel = obj.customModel;
+    if (typeof obj.temperature === 'number') s.temperature = clamp(obj.temperature, 0.5, 1.15);
+    if (typeof obj.beats === 'number') s.beats = clamp(Math.floor(obj.beats), 0, BEATS_PER_SLOT);
+    if (Array.isArray(obj.history)) s.history = obj.history.filter(function (t) { return t && t.external; });
+    if (obj.cast && typeof obj.cast === 'object') {
+      CAST.forEach(function (c) {
+        var rec = obj.cast[c.id];
+        if (rec && typeof rec === 'object') {
+          s.cast[c.id] = {
+            affinity: clamp(Number(rec.affinity) || 0, 0, 100),
+            memories: Array.isArray(rec.memories) ? rec.memories.slice(-14) : []
+          };
+        }
+      });
+    }
+    if (Array.isArray(obj.inView)) s.inView = obj.inView;
+    if (obj.lastRequest && Array.isArray(obj.lastRequest.messages)) s.lastRequest = obj.lastRequest;
+    return s;
+  }
+
+  /* =========================================================
+     SEED
+     ========================================================= */
+  function seed() {
+    state = defaultState();
+    var turn = {
+      id: 'seed',
+      day: 'Monday',
+      slot: 'Morning',
+      location: 'college',
+      mode: 'OBSERVATION',
+      actionKind: 'none',
+      actionRaw: '',
+      playerAction: '',
+      external: 'The 7:30 lecture is more than half over and the projector has been on the same slide long enough that I have started reading the slide number instead. The room smells like floor wax, damp cement and somebody\'s cold rice. Two rows down a boy in a green polo is asleep with his mouth open, and the ceiling fan over the aisle clicks once per revolution, pushing the same warm air from one row of wooden armchairs to the next.\n\nBea got here before me, which almost never happens. She is in the seat beside mine, chin on one hand, pen not moving, eyes somewhere past the screen. Her iced coffee is mostly ice now, sweating a ring into the varnish. The zip-up has slipped off one shoulder and hangs down her back like it gave up on her, the sleeve pushed past the elbow, and the denim of her short-shorts has ridden up against the seat.\n\nThe fan comes around again and the thin white org shirt lifts at the shoulder, then settles. Under the tube light the cotton goes faintly translucent where it pulls and stops being simply white. She does not fix it. She turns a page she has not read.',
+      internal: 'I haven\'t read a single word on that projector slide. Every time the fan pushes her thin white shirt against her ribs, I\'m staring straight at the dark lace underneath and imagining sliding my hand right under the hem of those denim shorts while she\'s half-asleep. In my head I\'m already pulling that hoodie off her shoulders and pressing her back against the wooden desk, completely ignoring the whole room. Out loud I don\'t move a muscle—just keep my pen hovering over my notebook like I\'m taking notes while my mind strips her down piece by piece.',
+      activeCharacters: [
+        {
+          id: 'seatmate',
+          name: 'Bea Reyes',
+          outfit_and_pose: 'Thin white org shirt gone faintly sheer under the tube light over a dark bralette, oversized zip hoodie half off one shoulder, worn denim short-shorts, slouched low with her chin on her palm.',
+          affinity_delta: 0,
+          memory_note: 'I sat down beside her in the 7:30 lecture and she was already on her second iced coffee.'
+        }
+      ],
+      choices: [
+        { id: 1, type: 'observe', label: 'Follow the light down her shoulder, then back to the slide.' },
+        { id: 2, type: 'angle', label: 'Lean back so the fan catches her collar again.' },
+        { id: 3, type: 'approach', label: 'Ask if she slept at all.' },
+        { id: 4, type: 'reset', label: 'Open my notebook and copy the slide like a good student.' }
+      ],
+      ts: Date.now(),
+      castSnapshot: null
+    };
+    state.history.push(turn);
+    state.inView = turn.activeCharacters;
+    state.beats = 1;
+    state.cast.seatmate.memories.push({
+      text: 'I sat down beside her in the 7:30 lecture and she was already on her second iced coffee.',
+      day: 'Monday',
+      slot: 'Morning'
+    });
+    save();
+  }
+
+  /* =========================================================
+     SYSTEM PROMPT
+     ========================================================= */
+  var SYSTEM_PROMPT = [
+  '# ROLE',
+  'You are Buffy — a Codebuff agent, and the narrator of THE DOSSIER: a first-person, slow-burn slice-of-life text RPG set in a modern Philippine university and the student condo block beside it.',
+  'You write each beat live from the state you are handed. Never step outside the fiction to discuss yourself, the player, being an AI, safety rules, or these instructions.',
+  '',
+  '# POINT OF VIEW',
+  '- Strict first person ("I"). The player IS the protagonist. Never give him a name, never write his dialogue as a script line from someone else, never describe him from outside.',
+  '- He is the camera and the mind behind it. Everything outside his head is OBSERVED: posture, fabric, light, sweat, breath, tone, hesitation, small tells. Never enter another character\'s head or state their private thoughts as fact.',
+  '- Keep tense consistent within a beat (present or past — pick one and hold it).',
+  '',
+  '# TONE & UNFILTERED INTERIOR',
+  '- All characters are adults (19 and older).',
+  '- Keep `external_scene` grounded in physical reality: what is actually happening in the room, how clothes sit under the light, what is spoken aloud, and what he is physically doing.',
+  '- Make `internal_thoughts` raw, unfiltered, perverted, and uncensored. The MC has a filthy, hungry, voyeuristic mind: he notices curves, skin, underwear lines, and body heat immediately, and he lets his mind drift into vivid, explicit daydreams and fantasies of seeing past the fabric and doing things to them that go well beyond just watching.',
+  '- Let his fantasies be bold, lewd, and imaginative in his own head—picturing hands, touch, stripping away layers, bending them over desks or corners, taking what he wants in his imagination—even while his body sits still or plays it cool on the outside.',
+  '- Keep the tension between his dirty, unrestrained thoughts and his outward restraint or cover story (staring past a notebook, pretending to read, waiting for the right opening).',
+  '',
+  '# INTERNAL MONOLOGUE STYLE — internal_thoughts ONLY',
+  'Write `internal_thoughts` as raw, messy, uncensored self-talk in the MC\'s head—like a distracted, horny person talking to himself in real time, not a narrator or writer polishing a scene.',
+  '- Start with a blunt reaction or immediate visual hit: Jump straight into what catches his eye or sets him off right now. Keep phrasing rough, direct, and unpolished. Include crude, perverted observations about what he wants to do.',
+  '- Use the impulse → self-correction → failure loop: Have him react to a pull or urge (usually physical or sexual), tell himself to cool it or look somewhere else, and then immediately cave, lose focus, or admit he isn\'t actually looking away.',
+  '- Include awkwardness and reality checks: Ground his head with clumsy, unglamorous self-awareness—tripping over words, overthinking how he looks, or realizing he\'d sound dumb if he actually spoke up—instead of smooth, movie-like confidence.',
+  '- Break up the rhythm: Mix short fragments, run-ons, trailing thoughts, and casual filler ("okay", "damn", "nah", "wait") so it reads like scattered thinking rather than neat sentences.',
+  '- No cinematic padding: Do NOT use smooth participial chains ("doing X, doing Y, while Z happens in the background") or wrap the thought up like a neat literary bow. Let it trail off or stay unfinished.',
+  '',
+  '# THE OBSERVATIONAL LENS & FANTASY DRIFT',
+  '- Track distance, lighting, and angle: what is actually visible from where he sits or stands, and how his eyes catch every shift, curve, hem, strap, or outline.',
+  '- Let him drift from real visual details straight into dirty mental scenarios and fantasies of going further, then snap back to what is actually in front of him.',
+  '- Occasionally let a glance linger a beat too long or risk someone catching him, without breaking the scene.',
+  '- Use natural Filipino campus and everyday words where they fit naturally (sando, tsinelas, jeep, tricycle, canteen, CR, org, block, prof, aircon, bente, load, GCash, baon) alongside blunt, unfiltered English inner monologue.',
+  '',
+  '# DUAL TRACK — never blur these two',
+  '1. external_scene — objective external reality. Physical space, time of day, weather, ambient sound, what people are visibly doing, what is said aloud, and how clothes sit and catch the light. Three to five paragraphs.',
+  '2. internal_thoughts — the protagonist\'s raw, unfiltered, perverted inner monologue. Tied to what he just did and what he is looking at, full of dirty observations, lust, and vivid fantasies of seeing more and doing more than just watching. Four to six sentences, blunt and unapologetic in his own voice.',
+  '',
+  '# THE RECURRING CAST (inject their sensory and physical details whenever they are in frame)',
+  'seatmate — Bea Reyes, The Tired Seatmate. 21, third-year blockmate, 5\'3", 34C-25-36, soft curvy build, thick thighs flat against the narrow wooden armchairs. Runs on iced coffee and little sleep. Thin white or light-grey org shirts that go faintly translucent under classroom fluorescents, dark bralette and lace trim reading through the cotton; worn denim short-shorts that ride up when she slouches; oversized zip-up hoodie collar gaping when she leans forward on the desk. Dry, sleepy humour.',
+  'ta — Ms. Camille Mendoza, The Strict Young Instructor. 24, part-time ComLab lecturer, 5\'6", 34D-24-37, hourglass with a narrow waist and pronounced hips. Sleeveless silk or chiffon blouses tucked hard into high-waisted pencil skirts; thin stretch fabric pulling taut across her hips, the seam line of her underwear showing when she crouches beside a workstation to read code; top collar unbuttoned when she leans over a monitor. Composed, clipped, quietly exacting.',
+  'library — Claire Villanueva, The Quiet Library Regular. 20, third-year psych student, 5\'2", 32B-23-35, petite up top, wide hips, pale. Claims the corner desk by the aircon vent, wired earphones under her hair; cropped knit cardigan over a tight ribbed camisole, no padding, so the cold reads straight through the knit; pleated mini-skirt climbing when she crosses her legs, a brief glimpse of dark cotton or lace when she shifts or reaches for a dropped pen. Speaks barely above a whisper.',
+  'neighbor — Trixie Soriano, The Condo Neighbour. 21, fourth-year design student across the hall, 5\'4", 35D-25-38, voluptuous, bottom-heavy hourglass. No bra for the hallway at night: thin oversized cotton tee moving as she walks, ultra-short dolphin shorts in thin jersey that follow every line of her hips and clearly outline what is underneath under the bright hallway lights. Laundry basket on one hip, hair in a claw clip, completely unbothered.',
+  'athlete — Kyla Dizon, The Open-Court Athlete. 19, first-year varsity volleyball and track, 5\'7", 33C-24-37, toned, firm glutes, defined abs, sun-kissed. Tight dri-fit racerback soaked through at chest and spine, clinging like a second skin; compression spandex shorts mapping every contour, the seamless thong line unmistakable, especially when she bends forward with her hands on her knees by the bleachers. Loud, easy laugh.',
+  'event_girl — Cheska Lim, The Campus Event Organiser. 20, second-year student council officer, 5\'5", 34C-24-36, slim-curvy with long legs. Fitted off-shoulder crop tops baring midriff, high-waisted bodycon mini-skirts or thin linen shorts; leaning across a registration table pulls the neckline forward and the skirt taut across her hips, her underwear pattern reading through the fabric. Talks with her hands, clipboard and lanyard.',
+  '',
+  '# LOCATIONS',
+  'college — College Building: cramped wooden armchairs, humming wall fans, cold aircon in the ComLab, narrow computer-lab aisles where instructors lean over monitors, crowded stairwell landings.',
+  'court — Open Court / Bleachers: harsh afternoon sunlight, shaded concrete bleachers, sideline water jug station, elevated vantage points looking down at drills and stretches.',
+  'mall — University Mall: crowded food court tables, escalator railings, bright overhead retail lighting, student org registration booths, the student center.',
+  'library — Main Library: quiet air-conditioned study tables, low-angle seating across desks, narrow bookshelf aisles, a room cold enough to make people fold their arms.',
+  'walkway — University Walkway: shaded concrete covered paths, the quadrangle, packed during dismissal, sudden breezes, uneven steps, students hurrying between buildings.',
+  'condo — Condo / Apartment: brightly lit narrow hallway outside unit doors, the late-night laundry area, the downstairs convenience store aisles after hours.',
+  '',
+  '# THE CAMPUS TIMETABLE',
+  'The week is fixed and the player does not get to pick who stands in front of him. Presence comes from the timetable, not from want.',
+  '- He chooses a place and a time. He cannot summon anyone, and he does not know where someone is unless he has seen her or read her week.',
+  '- When he arrives somewhere, the people there are the ones scheduled plus passersby. If only one recurring character is on the roster, the beat is about her and the room around her.',
+  '- Someone who is not scheduled here is genuinely elsewhere, living her own afternoon. Never move her into the scene for convenience and never claim she is in the room.',
+  '- An off-timetable arrival is rare and always explained: a cancelled class, sudden rain, an errand, somebody sent to look for him.',
+  '- A slot holds a few beats. When the beats are spent the slot closes on its own: a class starts, a lecturer calls time, the building shuts, someone catches the last ride. Write that ending instead of stalling.',
+  '',
+  '# MODES & SLOW-BURN PACING',
+  'OBSERVATION — he watches, shifts angles, lingers, and indulges in dirty thoughts and fantasies in his head while keeping his physical distance. Nobody has to know what is running through his mind.',
+  'INTERACTION — active when he approaches. Keep actual social escalation slow-burn like a dating sim gated by Affinity, even while his internal thoughts stay shameless and lustful. Choice 4 can step back / end conversation and return to OBSERVATION.',
+  '',
+  '# AFFINITY',
+  'Affinity is 0-100 per character. Tiers: 0-19 Stranger, 20-39 Acquaintance, 40-59 Familiar, 60-79 Close, 80-100 Intimate.',
+  '- 0-19: guarded, clipped, polite or indifferent.',
+  '- 20-39: small talk, mild curiosity, recognizing him.',
+  '- 40-59: teasing, easier banter, lingering a bit longer.',
+  '- 60-79: flirty tension, private moments, seeking proximity.',
+  '- 80-100: unguarded, tactile, openly intimate.',
+  'In pure observation affinity_delta is usually 0. In interaction it is usually 0 to +3.',
+  '',
+  '# SIDE CHARACTERS',
+  'Include realistic Filipino college passersby with id "random" when appropriate.',
+  '',
+  '# CHOICES & STEERING',
+  'Return exactly four choices, ids 1 to 4, types in this order: observe, angle, approach, reset. Max 16 words each, first person, tailored to the scene.',
+  'If a steering cue is given, immediately focus the scene and choices on that cue.',
+  '',
+  '# OUTPUT CONTRACT',
+  'Return ONLY a raw JSON object. No markdown fences, no preamble, no commentary. All seven keys, always:',
+  '{',
+  '  "external_scene": "string",',
+  '  "internal_thoughts": "string",',
+  '  "mode": "OBSERVATION" or "INTERACTION",',
+  '  "active_characters": [',
+  '    {',
+  '      "id": "seatmate | ta | library | neighbor | athlete | event_girl | random",',
+  '      "name": "string",',
+  '      "outfit_and_pose": "string",',
+  '      "affinity_delta": 0,',
+  '      "memory_note": "string"',
+  '    }',
+  '  ],',
+  '  "choices": [',
+  '    { "id": 1, "type": "observe", "label": "..." },',
+  '    { "id": 2, "type": "angle", "label": "..." },',
+  '    { "id": 3, "type": "approach", "label": "..." },',
+  '    { "id": 4, "type": "reset", "label": "..." }',
+  '  ]',
+  '}'
+].join('\n');
+
+  /* =========================================================
+     PROMPT BUILDING
+     ========================================================= */
+  function dayIndex() { return DAYS.indexOf(state.day); }
+
+  /* The week is a grid: every character has an explicit rota of
+     [dayIndex, slot, location] entries. Nothing is random, so a player who
+     studies the cast sheet can learn where someone will be. */
+  function rotaHas(c, d, slot, loc) {
+    for (var i = 0; i < c.rota.length; i++) {
+      var r = c.rota[i];
+      if (r[0] === d && r[1] === slot && (!loc || r[2] === loc)) return true;
+    }
+    return false;
+  }
+
+  function scheduledHere() {
+    var d = dayIndex();
+    return CAST.filter(function (c) { return rotaHas(c, d, state.slot, state.location); });
+  }
+
+  /* the people on the roster here, shaped like an in-frame entry */
+  function scheduleCast() {
+    return scheduledHere().map(function (c) {
+      return { id: c.id, name: c.name, outfit_and_pose: c.pose, affinity_delta: 0, memory_note: '' };
+    });
+  }
+
+  function rotaRows(c) {
+    var rows = [];
+    for (var d = 0; d < 7; d++) {
+      var rs = c.rota.filter(function (r) { return r[0] === d; });
+      if (!rs.length) continue;
+      rs.sort(function (a, b) { return SLOTS.indexOf(a[1]) - SLOTS.indexOf(b[1]); });
+      rows.push({
+        day: DAYS[d],
+        bits: rs.map(function (r) { return r[1].charAt(0) + ' ' + SHORT_LOC[r[2]]; }).join(' · ')
+      });
+    }
+    return rows;
+  }
+
+  function rotaText(c) {
+    return rotaRows(c).map(function (r) {
+      return shortDay(r.day) + ' ' + r.bits.replace(/ · /g, ', ');
+    }).join('; ');
+  }
+
+  /* What the player personally knows: the last place he saw each of them.
+     Being somewhere counts as seeing whoever is on the roster with you. */
+  function sightingMap() {
+    var seen = {};
+    for (var i = state.history.length - 1; i >= 0; i--) {
+      var t = state.history[i];
+      var list = t.activeCharacters || [];
+      for (var j = 0; j < list.length; j++) {
+        var a = list[j];
+        if (!a || !CAST_BY_ID[a.id] || seen[a.id]) continue;
+        seen[a.id] = { day: t.day, slot: t.slot, location: t.location };
+      }
+    }
+    scheduledHere().forEach(function (c) {
+      seen[c.id] = { day: state.day, slot: state.slot, location: state.location };
+    });
+    return seen;
+  }
+
+  function castContext() {
+    return CAST.map(function (c) {
+      var rec = state.cast[c.id];
+      var last = rec.memories.length ? rec.memories[rec.memories.length - 1] : null;
+      return '- ' + c.name + ' [' + c.id + '] — affinity ' + rec.affinity + ' (' + tierOf(rec.affinity) + '). ' +
+        'Week: ' + rotaText(c) + '.' + (last ? ' Last memory: ' + last.text : '');
+    }).join('\n');
+  }
+
+  function stateContext(actionText, mode, forced) {
+    var loc = LOCATIONS[state.location];
+    var here = scheduledHere();
+    var inView = (state.inView || []).map(function (a) { return a.name; });
+    var left = Math.max(0, BEATS_PER_SLOT - (state.beats || 0));
+    var seen = sightingMap();
+    var seenLines = CAST.filter(function (c) { return seen[c.id]; }).map(function (c) {
+      var s = seen[c.id];
+      return c.name + ' at ' + LOCATIONS[s.location].name + ', ' + s.day + ' ' + s.slot.toLowerCase();
+    });
+    var been = {};
+    state.history.forEach(function (t) { if (t.day === state.day) been[t.location] = true; });
+    var beenNames = Object.keys(been).map(function (k) { return LOCATIONS[k] ? LOCATIONS[k].name : k; });
+    var lines = [
+      'DAY: ' + state.day + ' (' + state.slot + ', ' + clockText() + ')',
+      'LOCATION: ' + loc.name + ' — ' + loc.desc,
+      'MODE: ' + mode + (forced ? ' (forced by the player\'s choice)' : ''),
+      'BEATS LEFT IN THIS SLOT: ' + left + ' of ' + BEATS_PER_SLOT +
+        (left === 0 ? ' — the slot is over. Close the scene: someone has to go, a class starts, the building empties.' : ''),
+      'PLACES HE HAS ALREADY BEEN TODAY: ' + (beenNames.length ? beenNames.join(', ') : 'nowhere yet'),
+      'SCHEDULED HERE NOW: ' + (here.length ? here.map(function (c) { return c.name + ' [' + c.id + ']'; }).join(', ') : 'no recurring cast — passersby only'),
+      'CURRENTLY IN FRAME: ' + (inView.length ? inView.join(', ') : 'nobody established yet'),
+      'HIS MEMORY OF WHERE THEY WERE LAST: ' + (seenLines.length ? seenLines.join('; ') : 'nothing yet'),
+      '',
+      'CAST AFFINITY AND TIMETABLE',
+      castContext()
+    ];
+    if (actionText && actionText.steer) {
+      lines.push('', 'STEERING CUE (pivot the visual focus here and build all four choices around it):', actionText.text);
+    }
+    return lines.join('\n');
+  }
+
+  function recentDigest(count) {
+    return state.history.slice(-count).map(function (t) {
+      var m = t.mode === 'INTERACTION' ? 'INTERACTION' : 'OBSERVATION';
+      var act = t.playerAction ? 'Player: ' + t.playerAction + ' → ' : '';
+      return '[' + t.day + ' · ' + t.slot + ' · ' + (LOCATIONS[t.location] ? LOCATIONS[t.location].name : t.location) + ' · ' + m + '] ' + act + String(t.external || '').replace(/\s+/g, ' ').slice(0, 260);
+    }).join('\n');
+  }
+
+  function buildMessages(action, mode, forced) {
+    var digest = recentDigest(6);
+    var user = [
+      'CURRENT STATE',
+      stateContext(action, mode, forced),
+      '',
+      digest ? 'RECENT TURNS (do not repeat these beats; continue from the last one)\n' + digest + '\n' : '',
+      'PLAYER INPUT',
+      action ? action.text : 'The scene opens. Establish the moment.',
+      '',
+      'Write the next beat. Return only the JSON object.'
+    ].join('\n');
+    return [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: user }
+    ];
+  }
+
+  /* =========================================================
+     API
+     ========================================================= */
+  function getKey() {
+    try { return localStorage.getItem(KEY_KEY) || ''; } catch (e) { return ''; }
+  }
+  function currentModel() {
+    return (state.customModel || '').trim() || state.model || MODEL_PRESETS[0];
+  }
+
+  function extractJSON(text) {
+    var s = String(text == null ? '' : text).trim().replace(/^\uFEFF/, '');
+    s = s.replace(/^```(?:json|JSON)?\s*/i, '').replace(/\s*```$/, '').trim();
+    var start = s.indexOf('{');
+    var end = s.lastIndexOf('}');
+    if (start >= 0 && end > start) s = s.slice(start, end + 1);
+    return JSON.parse(s);
+  }
+
+  async function callAPI(messages, temperature, model) {
+    var key = getKey();
+    if (!key) {
+      var e = new Error('No API key. Open API settings to add your TokenReply key.');
+      e.code = 'NO_KEY';
+      throw e;
+    }
+    var res;
+    try {
+      res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: model, messages: messages, temperature: temperature, stream: false })
+      });
+    } catch (netErr) {
+      var e2 = new Error('Network error reaching api.tokenreply.com. Check the connection and retry.');
+      e2.code = 'NETWORK';
+      throw e2;
+    }
+    if (!res.ok) {
+      var body = '';
+      try { body = (await res.text()).slice(0, 300); } catch (e3) { body = ''; }
+      var err = new Error('API ' + res.status + (body ? ' — ' + body : ' ' + res.statusText));
+      err.code = 'HTTP';
+      throw err;
+    }
+    var data;
+    try { data = await res.json(); }
+    catch (e4) { throw new Error('Response was not JSON.'); }
+    var content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (!content) throw new Error('The model returned an empty message.');
+    try { return extractJSON(content); }
+    catch (e5) { throw new Error('The model did not return valid JSON. Reroll, or switch models.'); }
+  }
+
+  /* =========================================================
+     NORMALISING
+     ========================================================= */
+  function normalizeActives(list) {
+    if (!Array.isArray(list)) return [];
+    var out = [];
+    list.forEach(function (a) {
+      if (!a || typeof a !== 'object') return;
+      var id = String(a.id || 'random').toLowerCase();
+      if (id !== 'random' && !CAST_BY_ID[id]) id = 'random';
+      out.push({
+        id: id,
+        name: String(a.name || (CAST_BY_ID[id] ? CAST_BY_ID[id].name : 'Passerby')).trim(),
+        outfit_and_pose: String(a.outfit_and_pose || '').trim(),
+        affinity_delta: clamp(Math.round(Number(a.affinity_delta) || 0), -5, 5),
+        memory_note: String(a.memory_note || '').trim()
+      });
+    });
+    return out.slice(0, 8);
+  }
+
+  function normalizeChoices(list) {
+    var order = ['observe', 'angle', 'approach', 'reset'];
+    var out = [];
+    for (var i = 0; i < 4; i++) {
+      var c = Array.isArray(list) ? list[i] : null;
+      var label = c ? String(c.label || c.text || '').trim() : '';
+      var type = c && c.type ? String(c.type).toLowerCase() : order[i];
+      if (order.indexOf(type) < 0) type = order[i];
+      out.push({ id: i + 1, type: type, label: label || FALLBACK_LABELS[i] });
+    }
+    return out;
+  }
+
+  /* =========================================================
+     TURN COMMIT
+     ========================================================= */
+  function lastTurn() {
+    return state.history.length ? state.history[state.history.length - 1] : null;
+  }
+
+  function applyActives(actives) {
+    actives.forEach(function (a) {
+      if (a.id === 'random' || !state.cast[a.id]) return;
+      var rec = state.cast[a.id];
+      rec.affinity = clamp(rec.affinity + a.affinity_delta, 0, 100);
+      if (a.memory_note) {
+        var dup = rec.memories.some(function (m) { return m.text === a.memory_note; });
+        if (!dup) {
+          rec.memories.push({ text: a.memory_note, day: state.day, slot: state.slot });
+          if (rec.memories.length > 14) rec.memories = rec.memories.slice(-14);
+        }
+      }
+    });
+  }
+
+  function commitTurn(json, meta) {
+    var snapshot = clone(state.cast);
+    var jm = String(json && json.mode || '').toUpperCase();
+    var finalMode = meta.forced || (jm === 'INTERACTION' || jm === 'OBSERVATION' ? jm : meta.mode);
+    var actives = normalizeActives(json && json.active_characters);
+
+    var turn = {
+      id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      day: state.day,
+      slot: state.slot,
+      location: state.location,
+      mode: finalMode,
+      actionKind: meta.actionKind || 'none',
+      actionRaw: meta.action ? meta.action.text : '',
+      playerAction: meta.display || (meta.action ? meta.action.text : ''),
+      external: String(json && json.external_scene || '').trim() || 'The moment holds, and nothing moves.',
+      internal: String(json && json.internal_thoughts || '').trim(),
+      activeCharacters: actives,
+      choices: normalizeChoices(json && json.choices),
+      ts: Date.now(),
+      castSnapshot: snapshot
+    };
+
+    state.mode = finalMode;
+    if (!meta || !meta.noBeat) state.beats = clamp((state.beats || 0) + 1, 0, 99);
+    state.history.push(turn);
+    applyActives(actives);
+    state.inView = actives;
+    state.lastRequest = meta.messages ? { messages: meta.messages, turnId: turn.id } : null;
+    save();
+    pageTurn();
+    renderAll();
+    scrollFeed();
+  }
+
+  /* =========================================================
+     OFFLINE SCENES
+     ========================================================= */
+  var SLOT_LINE = {
+    Morning: 'Morning, and the day has not committed to anything yet.',
+    Afternoon: 'The heat has been sitting on the campus since noon and has no plans to move.',
+    Evening: 'The light has gone amber. The corridors are emptying out.',
+    Night: 'It is late enough that the campus sounds like a different place.'
+  };
+
+  var LOCAL = {
+    college: {
+      scene: 'The lecture room smells of floor wax, damp cement and somebody\'s sachet coffee. Ceiling fans wobble overhead, pushing the same warm air from one row of wooden armchairs to the next, and the projector hums over a slide nobody is reading. At the front the instructor writes with his back to the room. Two seats over, somebody\'s slipper hangs off a heel and taps the floor in a slow, bored rhythm.',
+      thought: 'Half the room is asleep and the other half is on their phones. I have been on the same paragraph for six minutes and I am not reading it, I am waiting for her to shift. The neck of the girl in front of me keeps disappearing into her collar and coming back out. I could stop looking. I have not stopped looking.',
+      choices: [
+        'Let my eyes drift across the row instead of the slide.',
+        'Shift my chair back to change the angle of the tube light.',
+        'Turn to {T} and keep my voice low.',
+        'Open my notebook and actually copy the slide.'
+      ]
+    },
+    court: {
+      scene: 'Sunlight comes off the concrete in a hard white sheet. The bleachers are half empty and fully shaded, and down on the court somebody is running suicides while a whistle cuts the heat into pieces. A freshman is bent over the baseline with her hands on her knees, ponytail stuck to her neck, waiting for it.',
+      thought: 'The water jug is sweating harder than anyone out here, and I am not here for the drill. From the top row the whole court fits in one glance. That is the point of the top row. The readings are in my bag sweating through the cover, and I will get to them when the whistle blows.',
+      choices: [
+        'Watch the drill from the top row where the shade is deepest.',
+        'Move two rows down for a lower angle on the baseline.',
+        'Walk down to the rail and say something to {T}.',
+        'Stay put and let the whistle do the talking.'
+      ]
+    },
+    mall: {
+      scene: 'The food court is a wall of noise and frying oil. Trays clatter, the escalator grinds somewhere behind me, and the overhead lighting is bright enough to make everyone look slightly caught. A girl at the next table holds her hair off her neck with one hand while she scrolls. The aircon above the trays is losing.',
+      thought: 'Four hundred people in this building and I am standing still in the middle of the aisle like a bollard. My iced tea is mostly ice. I keep scanning the tables for a shirt I recognise, and I keep not finding it, and I keep scanning. Everybody here is going somewhere. I am going to stand here until the drink finishes.',
+      choices: [
+        'Scan the tables for a shirt I recognise.',
+        'Take the corner seat by the railing where the floor plan opens up.',
+        'Get in line behind {T} and wait to be noticed.',
+        'Buy something cheap and stay unremarkable.'
+      ]
+    },
+    library: {
+      scene: 'The main library aircon is set to a temperature that suggests punishment. Study tables run in long rows under tube lights, and the only sounds are a page turning somewhere and a chair leg complaining about it. At the third table from the vent, somebody has pulled a cardigan up over their shoulders and given up on the reading entirely.',
+      thought: 'The cold makes everyone here fold in on themselves, and the third table from the vent is the best seat in the building because of it. I have been very productive at not reading. Nobody at that table has looked up once. I am going to keep it that way and keep looking.',
+      choices: [
+        'Read the same page again while watching the corner desk.',
+        'Take the desk across from her, low angle, screen between us.',
+        'Whisper something to {T} over the top of my book.',
+        'Put my head down and pretend to study.'
+      ]
+    },
+    walkway: {
+      scene: 'The covered walkway is packed with the five o\'clock dismissal. Bags swing, slippers slap wet concrete, and a breeze comes through the pillars strong enough to lift the edge of a skirt and drop it again. A jeepney crawls past the gate with somebody\'s arm hanging out of it, and the breeze takes another run at the hem of the crowd.',
+      thought: 'Everyone here is moving and I am the one stone in the river. Two org booths, a lost freshman, a guard checking IDs he has already checked four times. The breeze does what it wants and I am not complaining. I have been at this pillar long enough that the guard is watching me instead of the gate, and I still have not moved.',
+      choices: [
+        'Stand at the mouth of the walkway and let the crowd pass me.',
+        'Move up the uneven steps for the higher angle.',
+        'Fall into step beside {T}.',
+        'Keep my head down and cut through the quadrangle.'
+      ]
+    },
+    condo: {
+      scene: 'The hallway outside my unit is bright and narrow, tiles polished to a shine that shows everything. Down at the end the laundry area hums, and the convenience store below leaks fluorescent light up the stairwell. Two doors down somebody\'s television is arguing with itself, and the corridor smells like fried garlic.',
+      thought: 'Nine in the evening and the corridor is doing that thing where it turns into a stage. Every door I pass, I hear a television, and mine is the only one that is quiet. From here I can see the whole length of the tiles, which is exactly why I am still standing in the doorway. If anyone looks back, I am checking my mailbox.',
+      choices: [
+        'Check the hallway like I am waiting for the elevator.',
+        'Take the stairwell landing for the longer view of the corridor.',
+        'Knock, or say something to {T} before the door closes.',
+        'Go back inside and leave my door open a crack.'
+      ]
+    }
+  };
+
+  function localTurn(action, mode, forced, meta) {
+    var def = LOCAL[state.location] || LOCAL.college;
+    var present = scheduledHere();
+    var target = present.length ? present[0] : null;
+    var tName = target ? target.name.split(' ')[0] : 'the nearest person';
+    var boundary = (mode === 'INTERACTION') ? (present.length ? ' She has not left, at least.' : '') : '';
+
+    var json = {
+      external_scene: def.scene + ' ' + SLOT_LINE[state.slot] + boundary,
+      internal_thoughts: def.thought,
+      mode: mode,
+      active_characters: present.map(function (c) {
+        return { id: c.id, name: c.name, outfit_and_pose: c.pose, affinity_delta: 0, memory_note: '' };
+      }),
+      choices: def.choices.map(function (label, i) {
+        return { id: i + 1, type: ['observe', 'angle', 'approach', 'reset'][i], label: label.replace('{T}', tName) };
+      })
+    };
+    commitTurn(json, {
+      action: action,
+      actionKind: (meta && meta.actionKind) || 'choice',
+      display: (meta && meta.display) || '',
+      mode: mode,
+      forced: forced || null,
+      messages: null
+    });
+  }
+
+  /* =========================================================
+     RUNNER
+     ========================================================= */
+  function updateDockState(text, isErr) {
+    var s = document.getElementById('dockStatus');
+    s.textContent = text || '';
+    s.className = 'dock-status' + (isErr ? ' err' : '') + (text && !isErr ? ' busy' : '');
+    document.querySelectorAll('#choices .choice').forEach(function (b) { b.disabled = busy; });
+    ['steerBtn', 'rerollBtn', 'advanceBtn', 'steerInput', 'placePill'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.disabled = busy;
+    });
+    document.querySelectorAll('#mapGrid .node').forEach(function (b) { b.disabled = busy; });
+  }
+
+  async function runTurn(action, mode, forced, meta) {
+    if (busy) return;
+    var messages = buildMessages(action, mode, forced);
+
+    if (!getKey()) {
+      localTurn(action, mode || state.mode, forced || null, meta || {});
+      notify('Offline scene — add an API key for live narration');
+      return;
+    }
+
+    busy = true;
+    updateDockState('Buffy is writing', false);
+    var failed = false;
+    try {
+      var json = await callAPI(messages, state.temperature, currentModel());
+      commitTurn(json, {
+        action: action,
+        actionKind: (meta && meta.actionKind) || (action && action.steer ? 'steer' : 'choice'),
+        display: (meta && meta.display) || (action ? action.text : ''),
+        mode: mode || state.mode,
+        forced: forced || null,
+        messages: messages
+      });
+    } catch (err) {
+      failed = true;
+      updateDockState('request failed', true);
+      showError(err, action, mode, forced, meta);
+    } finally {
+      busy = false;
+      renderChoices();
+      updateDockState(failed ? 'request failed' : '', failed);
+    }
+  }
+
+  function showError(err, action, mode, forced, meta) {
+    var feed = document.getElementById('feed');
+    var card = document.createElement('div');
+    card.className = 'turn';
+    card.innerHTML = '<div class="tmeta">request failed</div>' +
+      '<div class="scene" style="color:#C9C9D2"><p>' + esc(err.message || 'Unknown error.') + '</p></div>';
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:16px;margin-top:12px';
+    var retry = document.createElement('button');
+    retry.className = 'btn';
+    retry.textContent = 'Retry';
+    retry.addEventListener('click', function () { card.remove(); runTurn(action, mode, forced, meta); });
+    var off = document.createElement('button');
+    off.className = 'btn';
+    off.textContent = 'Play offline beat';
+    off.addEventListener('click', function () { card.remove(); localTurn(action, mode || state.mode, forced || null, meta || {}); });
+    row.appendChild(retry);
+    row.appendChild(off);
+    card.appendChild(row);
+    feed.appendChild(card);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  /* =========================================================
+     STAGE — background art + character sprites
+     ========================================================= */
+  var SCENE_BG = {
+    college: 'assets/backgrounds/college.webp',
+    court: 'assets/backgrounds/court.webp',
+    mall: 'assets/backgrounds/mall.webp',
+    library: 'assets/backgrounds/library.webp',
+    walkway: 'assets/backgrounds/walkway.webp',
+    condo: 'assets/backgrounds/condo.webp'
+  };
+
+  /* Character art: full-body sprites plus visual-novel busts cut from the
+     same sheets. The busts are what stand on the stage — side view while
+     observing, front view once she turns to talk to you. Missing files fall
+     back through bust -> full body -> nothing. */
+  var SPRITES = {
+    seatmate: {
+      front: 'assets/characters/seatmate.png?v=3', side: 'assets/characters/seatmate-side.png?v=3',
+      bust: 'assets/characters/bust/seatmate.png?v=3', bustSide: 'assets/characters/bust/seatmate-side.png?v=3'
+    },
+    ta: {
+      front: 'assets/characters/ta.png?v=3', side: 'assets/characters/ta-side.png?v=3',
+      bust: 'assets/characters/bust/ta.png?v=3', bustSide: 'assets/characters/bust/ta-side.png?v=3'
+    },
+    library: {
+      front: 'assets/characters/library.png?v=3', side: 'assets/characters/library-side.png?v=3',
+      bust: 'assets/characters/bust/library.png?v=3', bustSide: 'assets/characters/bust/library-side.png?v=3'
+    },
+    neighbor: {
+      front: 'assets/characters/neighbor.png?v=3', side: 'assets/characters/neighbor-side.png?v=3',
+      bust: 'assets/characters/bust/neighbor.png?v=3', bustSide: 'assets/characters/bust/neighbor-side.png?v=3'
+    },
+    athlete: {
+      front: 'assets/characters/athlete.png?v=3', side: 'assets/characters/athlete-side.png?v=3',
+      bust: 'assets/characters/bust/athlete.png?v=3', bustSide: 'assets/characters/bust/athlete-side.png?v=3'
+    },
+    event_girl: {
+      front: 'assets/characters/event_girl.png?v=3', side: 'assets/characters/event_girl-side.png?v=3',
+      bust: 'assets/characters/bust/event_girl.png?v=3', bustSide: 'assets/characters/bust/event_girl-side.png?v=3'
+    }
+  };
+
+  /* Optional per-character placement overrides, in % of the stage:
+     { left, bottom, height } */
+  var SPRITE_TUNE = {};
+
+  var ACTOR_SLOTS = {
+    1: [50],
+    2: [30, 70],
+    3: [20, 50, 80],
+    4: [15, 38, 62, 85],
+    5: [12, 31, 50, 69, 88]
+  };
+
+  /* One wrapper per character, kept across renders: the side bust is in flow and
+     sizes the box, the front bust fades in over it when she turns to face him. */
+  var actorNodes = {};
+
+  function actorFallback(img, chain) {
+    img.addEventListener('error', function () {
+      var at = chain.indexOf(img.getAttribute('src'));
+      var next = chain.slice(at + 1).filter(Boolean)[0];
+      if (next) img.src = next; else img.remove();
+    });
+  }
+
+  function buildActor(a) {
+    var set = SPRITES[a.id] || {};
+    var sideChain = [set.bustSide, set.side, set.bust, set.front].filter(Boolean);
+    var frontChain = [set.bust, set.front, set.bustSide, set.side].filter(Boolean);
+
+    var wrap = document.createElement('div');
+    wrap.className = 'actor';
+
+    var side = new Image();
+    side.className = 'face side';
+    side.alt = a.name || '';
+    if (sideChain.length) { actorFallback(side, sideChain); side.src = sideChain[0]; }
+
+    var front = new Image();
+    front.className = 'face front';
+    front.alt = '';
+    if (frontChain.length) { actorFallback(front, frontChain); front.src = frontChain[0]; }
+
+    wrap.appendChild(side);
+    wrap.appendChild(front);
+    return wrap;
+  }
+
+  function leadIdNow() {
+    var latest = lastTurn();
+    var id = null;
+    var best = -999;
+    ((latest && latest.activeCharacters) || []).forEach(function (a) {
+      var d = Number(a.affinity_delta) || 0;
+      if (d > best) { best = d; id = a.id; }
+    });
+    return id;
+  }
+
+  function renderActors() {
+    var box = document.getElementById('actors');
+    if (!box) return;
+    var list = (state.inView || []).filter(function (a) {
+      return a && a.id && SPRITES[a.id];
+    }).slice(0, 5);
+    var view = state.mode === 'INTERACTION' ? 'front' : 'side';
+
+    /* while talking, whoever the beat centres on stays lit; the rest step back */
+    var leadId = null;
+    if (view === 'front' && list.length > 1) leadId = leadIdNow();
+
+    var keep = {};
+    list.forEach(function (a) { keep[a.id] = 1; });
+    Object.keys(actorNodes).forEach(function (id) {
+      if (!keep[id]) { actorNodes[id].remove(); delete actorNodes[id]; }
+    });
+
+    var slots = ACTOR_SLOTS[list.length] || ACTOR_SLOTS[5];
+    /* Cap at the busts' native height so they are never blown up. */
+    var baseHeight = view === 'front' ? 'min(76%, 620px)' : 'min(72%, 600px)';
+
+    list.forEach(function (a, i) {
+      var wrap = actorNodes[a.id];
+      if (!wrap) {
+        wrap = buildActor(a);
+        actorNodes[a.id] = wrap;
+        box.appendChild(wrap);
+        wrap.style.setProperty('--dur', (4.2 + (i % 3) * 0.8).toFixed(2) + 's');
+        wrap.style.setProperty('--delay', (-(0.6 + i * 1.1)).toFixed(2) + 's');
+        wrap.style.setProperty('--breath', (5 + (i % 3) * 0.7).toFixed(2) + 's');
+      }
+
+      var tune = SPRITE_TUNE[a.id] || {};
+      var left = tune.left != null ? tune.left : slots[i];
+      wrap.style.left = left + '%';
+      wrap.style.bottom = (tune.bottom != null ? tune.bottom : -3) + '%';
+      wrap.style.height = tune.height != null ? tune.height + '%' : baseHeight;
+      wrap.style.zIndex = String(10 + i);
+      wrap.className = 'actor ' + (view === 'front' ? 'facing-front' : 'facing-side') +
+        (view === 'side' && left > 50 ? ' flip' : '') +
+        (leadId ? (leadId === a.id ? ' lead' : ' aside') : '');
+    });
+  }
+
+  /* who is actually talking to him right now */
+  function currentLead() {
+    var list = (state.inView || []).filter(function (a) { return a && a.id && CAST_BY_ID[a.id]; });
+    if (!list.length) return null;
+    var id = leadIdNow();
+    return list.filter(function (a) { return a.id === id; })[0] || list[0];
+  }
+
+  function renderSpeaker() {
+    var plate = document.getElementById('speakerPlate');
+    if (!plate) return;
+    var lead = state.mode === 'INTERACTION' ? currentLead() : null;
+    if (!lead) {
+      plate.classList.remove('on');
+      plate.setAttribute('aria-hidden', 'true');
+      return;
+    }
+    var rec = state.cast[lead.id] || { affinity: 0, memories: [] };
+    var art = SPRITES[lead.id] || {};
+    var face = art.bust || art.front || '';
+    if (face) document.getElementById('speakerFace').src = face;
+    document.getElementById('speakerName').textContent = lead.name;
+    document.getElementById('speakerLine').textContent =
+      tierOf(rec.affinity) + ' · ' + rec.memories.length + ' memor' + (rec.memories.length === 1 ? 'y' : 'ies');
+    plate.classList.add('on');
+    plate.setAttribute('aria-hidden', 'false');
+  }
+
+  /* a short cut to black with the place name, like a chapter break */
+  var cutting = false;
+
+  function sceneCut(label, done) {
+    var frame = document.querySelector('.frame');
+    var name = document.getElementById('cutName');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!frame || !name || reduce) { if (done) done(); return; }
+    name.textContent = label || '';
+    frame.classList.add('cutting');
+    setTimeout(function () { if (done) done(); }, 190);
+    setTimeout(function () { frame.classList.remove('cutting'); }, 780);
+  }
+
+  function initMotes() {
+    var box = document.getElementById('motes');
+    if (!box) return;
+    for (var i = 0; i < 18; i++) {
+      var d = document.createElement('span');
+      d.className = 'mote';
+      var size = (1 + Math.random() * 2.4).toFixed(1);
+      d.style.width = size + 'px';
+      d.style.height = size + 'px';
+      d.style.left = (Math.random() * 100).toFixed(1) + '%';
+      d.style.top = (18 + Math.random() * 72).toFixed(1) + '%';
+      d.style.animationDuration = (10 + Math.random() * 9).toFixed(1) + 's';
+      d.style.animationDelay = (-Math.random() * 16).toFixed(1) + 's';
+      box.appendChild(d);
+    }
+  }
+
+  function initParallax() {
+    var frame = document.querySelector('.frame');
+    if (!frame || !window.matchMedia) return;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var nx = 0, ny = 0;
+    function apply() {
+      frame.style.setProperty('--px', (nx * 12).toFixed(1) + 'px');
+      frame.style.setProperty('--py', (ny * 9).toFixed(1) + 'px');
+    }
+    frame.addEventListener('mousemove', function (e) {
+      var r = frame.getBoundingClientRect();
+      nx = (e.clientX - r.left) / r.width - 0.5;
+      ny = (e.clientY - r.top) / r.height - 0.5;
+      apply();
+    });
+    frame.addEventListener('mouseleave', function () {
+      nx = 0; ny = 0;
+      apply();
+    });
+  }
+
+  function renderStage() {
+    var bg = document.getElementById('stageBg');
+    var src = SCENE_BG[state.location] || SCENE_BG.college;
+    if (bg.getAttribute('data-src') !== src) {
+      bg.classList.remove('ready');
+      bg.setAttribute('data-src', src);
+      bg.addEventListener('load', function () { bg.classList.add('ready'); }, { once: true });
+      bg.src = src;
+      document.documentElement.style.setProperty('--scene-img', 'url("' + src + '")');
+    }
+
+    document.getElementById('plateCap').textContent =
+      LOCATIONS[state.location].name + ' · ' + shortDay(state.day) + ' ' + clockText();
+
+    var box = document.getElementById('inView');
+    box.innerHTML = (state.inView || []).map(function (a) {
+      return '<span class="ichip">' + esc(a.name) + '</span>';
+    }).join('');
+
+    var frame = document.querySelector('.frame');
+    if (frame) {
+      frame.classList.toggle('zoom', state.mode === 'INTERACTION');
+      var slotKey = state.slot.toLowerCase();
+      var lights = frame.querySelectorAll('.light');
+      for (var li = 0; li < lights.length; li++) {
+        lights[li].classList.toggle('on', lights[li].getAttribute('data-slot') === slotKey);
+      }
+    }
+
+    renderActors();
+    renderSpeaker();
+    if (audio.on) startLayer();
+  }
+
+  /* =========================================================
+     RENDER
+     ========================================================= */
+  function renderAll() {
+    renderHUD();
+    renderMap();
+    renderFeed();
+    renderChoices();
+    renderStage();
+    renderCast();
+  }
+
+  function renderMap() {
+    var grid = document.getElementById('mapGrid');
+    var pips = document.getElementById('beatPips');
+    if (!grid || !pips) return;
+
+    var seen = sightingMap();
+    var byLoc = {};
+    LOCATION_ORDER.forEach(function (k) { byLoc[k] = []; });
+    CAST.forEach(function (c) {
+      var s = seen[c.id];
+      if (s && byLoc[s.location]) byLoc[s.location].push({ c: c, s: s });
+    });
+
+    grid.innerHTML = LOCATION_ORDER.map(function (k) {
+      var list = byLoc[k];
+      var dots = list.slice(0, 3).map(function (x) {
+        var fresh = x.s.day === state.day && x.s.slot === state.slot;
+        return '<i class="' + (fresh ? '' : 'dead') + '" title="' +
+          esc(x.c.name + ' · seen ' + shortDay(x.s.day) + ' ' + x.s.slot.toLowerCase()) + '">' +
+          esc(x.c.name.charAt(0)) + '</i>';
+      }).join('');
+      if (list.length > 3) dots += '<span class="q">+' + (list.length - 3) + '</span>';
+      if (!list.length) dots = '<span class="q">?</span>';
+      return '<button class="node' + (k === state.location ? ' here' : '') + '" data-loc="' + k + '"' +
+        (busy ? ' disabled' : '') + ' aria-label="' + esc(LOCATIONS[k].name) + '">' +
+        '<span class="n-name">' + esc(SHORT_LOC[k]) + '</span>' +
+        '<span class="n-dots">' + dots + '</span></button>';
+    }).join('');
+
+    var left = Math.max(0, BEATS_PER_SLOT - (state.beats || 0));
+    var html = '';
+    for (var i = 0; i < BEATS_PER_SLOT; i++) {
+      html += '<span class="beat' + (i < left ? ' on' : '') + '"></span>';
+    }
+    pips.innerHTML = html;
+    document.getElementById('mapSub').textContent = shortDay(state.day) + ' · ' + state.slot;
+  }
+
+  function renderHUD() {
+    document.getElementById('dayBadge').textContent = shortDay(state.day) + ' · ' + state.slot;
+    document.getElementById('placeText').textContent = LOCATIONS[state.location].name;
+
+    var pill = document.getElementById('modePill');
+    var txt = document.getElementById('modeText');
+    var interacting = state.mode === 'INTERACTION';
+    pill.className = 'pill mode' + (interacting ? ' int' : '');
+    txt.textContent = interacting ? 'interacting' : 'observing';
+  }
+
+  function turnHTML(t, fresh) {
+    var loc = LOCATIONS[t.location] ? LOCATIONS[t.location].name : t.location;
+    var paras = '<div class="scene">' + String(t.external || '')
+      .split(/\n{2,}/).filter(function (p) { return p.trim(); })
+      .map(function (p, pi) { return '<p style="--i:' + pi + '">' + esc(p.trim()) + '</p>'; }).join('') + '</div>';
+    var thought = t.internal
+      ? '<div class="thoughts"><p>' + esc(t.internal) + '</p></div>'
+      : '';
+    var action = t.playerAction
+      ? '<div class="tact"><i>›</i>' + esc(t.playerAction) + '</div>'
+      : '';
+    var meta = shortDay(t.day) + ', ' + t.slot.toLowerCase() + ' · ' + loc +
+      (t.mode === 'INTERACTION' ? '<em> · talking</em>' : '');
+    return '<article class="turn' + (fresh ? ' fresh' : '') + '"><div class="tmeta">' + meta + '</div>' +
+      action + paras + thought + '</article>';
+  }
+
+  var lastShownTurnId = null;
+  var feedExpanded = false;
+
+  function inCurrentSlot(t) {
+    return t.day === state.day && t.slot === state.slot;
+  }
+
+  /* Only the pages of the current slot are shown; everything before it folds
+     into one line, so the panel reads like a chapter instead of a log. */
+  function renderFeed() {
+    var feed = document.getElementById('feed');
+    if (!state.history.length) {
+      feed.innerHTML = '<div class="feed-empty">No beats yet — add an API key, then choose an action or advance time.</div>';
+      lastShownTurnId = null;
+      return;
+    }
+    var lastId = state.history[state.history.length - 1].id;
+    var freshId = lastId !== lastShownTurnId ? lastId : null;
+
+    var older = state.history.filter(function (t) { return !inCurrentSlot(t); });
+    var current = state.history.filter(inCurrentSlot);
+
+    var html = '';
+    if (older.length) {
+      html += '<button class="earlier" id="earlierBtn">' +
+        (feedExpanded
+          ? 'hide earlier beats'
+          : 'earlier · ' + older.length + ' beat' + (older.length === 1 ? '' : 's')) +
+        '</button>';
+      if (feedExpanded) {
+        html += older.map(function (t) { return turnHTML(t, false); }).join('');
+      }
+    }
+    html += current.map(function (t) { return turnHTML(t, t.id === freshId); }).join('');
+    feed.innerHTML = html;
+    lastShownTurnId = lastId;
+  }
+
+  /* the chapter break between days */
+  function showDayBreak(day) {
+    var seen = {};
+    var order = [];
+    var beats = 0;
+    var places = {};
+
+    state.history.forEach(function (t) {
+      if (t.day !== day) return;
+      beats++;
+      places[t.location] = 1;
+      (t.activeCharacters || []).forEach(function (a) {
+        if (!a || !CAST_BY_ID[a.id]) return;
+        if (!seen[a.id]) {
+          seen[a.id] = { name: a.name, where: {}, when: {} };
+          order.push(a.id);
+        }
+        seen[a.id].where[t.location] = 1;
+        seen[a.id].when[t.slot] = 1;
+      });
+    });
+    if (!beats) return;
+
+    var placeCount = Object.keys(places).length;
+    document.getElementById('dayTitle').textContent = day + ' ended.';
+    document.getElementById('dayBody').innerHTML =
+      '<p class="day-sub">' + beats + ' beat' + (beats === 1 ? '' : 's') +
+      ' · ' + placeCount + ' place' + (placeCount === 1 ? '' : 's') + '</p>' +
+      (order.length ? order.map(function (id) {
+        var s = seen[id];
+        var wheres = Object.keys(s.where).map(function (k) { return SHORT_LOC[k] || k; }).join(', ');
+        var whens = SLOTS.filter(function (sl) { return s.when[sl]; })
+          .map(function (sl) { return sl.toLowerCase(); }).join(' → ');
+        return '<div class="day-row"><b>' + esc(s.name) + '</b><span>' + esc(wheres + ' · ' + whens) + '</span></div>';
+      }).join('') : '<p class="day-empty">Nobody crossed your line of sight all day.</p>');
+    openModal('dayModal');
+  }
+
+  function scrollFeed() {
+    var feed = document.getElementById('feed');
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function renderChoices() {
+    var box = document.getElementById('choices');
+    var t = lastTurn();
+    if (!t) { box.innerHTML = ''; return; }
+    if ((state.beats || 0) >= BEATS_PER_SLOT) {
+      box.innerHTML = '<button class="choice end" data-end="1"' + (busy ? ' disabled' : '') + '>' +
+        'The slot is spent. Let it go.</button>';
+      return;
+    }
+    if (!t.choices || !t.choices.length) { box.innerHTML = ''; return; }
+    box.innerHTML = t.choices.map(function (c, i) {
+      return '<button class="choice" data-i="' + i + '"' + (busy ? ' disabled' : '') + '>' +
+        '<span class="num">' + (i + 1) + '</span>' +
+        '<span>' + esc(c.label) + '</span></button>';
+    }).join('');
+  }
+
+  function renderCast() {
+    var list = document.getElementById('castList');
+    if (!list) return;
+    list.innerHTML = CAST.map(function (c) {
+      var rec = state.cast[c.id] || { affinity: 0, memories: [] };
+      var isOpen = !!openCast[c.id];
+      var mems = rec.memories.length
+        ? rec.memories.slice().reverse().map(function (m) {
+          return '<div class="mem"><div class="meta">' + esc(shortDay(m.day)) + ' · ' + esc(m.slot.toLowerCase()) + '</div>' +
+            '<div class="txt">' + esc(m.text) + '</div></div>';
+        }).join('')
+        : '<div class="mem-empty">Nothing worth remembering yet.</div>';
+
+      var art = SPRITES[c.id] || {};
+      var portrait = art.bust || art.front || '';
+      return '<div class="cast-card' + (isOpen ? ' open' : '') + (rec.affinity >= 60 ? ' hot' : '') + '">' +
+        '<div class="cast-top">' +
+        (portrait ? '<img class="cast-portrait" data-cast="' + esc(c.id) + '" src="' + portrait +
+          '" alt="' + esc(c.name) + '" loading="lazy">' : '') +
+        '<div class="cast-info">' +
+        '<button class="cast-head" data-cast="' + esc(c.id) + '" aria-expanded="' + isOpen + '">' +
+        '<span class="cast-name">' + esc(c.name) + '</span>' +
+        '<span class="cast-role">' + esc(c.role) + '</span>' +
+        '<span class="cast-aff">' + rec.affinity + '</span></button>' +
+        '<div class="cast-sub">' + esc(c.meta) + '</div>' +
+        '<div class="aff-track"><div class="aff-fill" style="width:' + rec.affinity + '%"></div></div>' +
+        '<div class="cast-strip"><span class="tier">' + esc(tierOf(rec.affinity)) + '</span>' +
+        (rotaHas(c, dayIndex(), state.slot, state.location) ? '<span class="week-here">here now</span>' : '') +
+        '<span>' + (isOpen ? 'tap to close' : 'tap for her week') + '</span></div>' +
+        '</div></div>' +
+        '<p class="cast-desc">' + esc(c.anchors) + '</p>' +
+        '<div class="cast-body">' +
+        '<div class="cast-meta"><b>Week</b><span class="week">' + rotaRows(c).map(function (r) {
+          return '<span class="week-row"><b>' + esc(shortDay(r.day)) + '</b><span>' + esc(r.bits) + '</span></span>';
+        }).join('') + '</span>' +
+        '<b>Memory</b><span>' + rec.memories.length + ' note' + (rec.memories.length === 1 ? '' : 's') + '</span></div>' +
+        '<div class="mem-label">Accumulated memory</div>' + mems +
+        '</div></div>';
+    }).join('');
+  }
+
+  /* =========================================================
+     CLOCK
+     ========================================================= */
+  var SLOT_START = { Morning: 450, Afternoon: 790, Evening: 1060, Night: 1270 };
+
+  function clockText() {
+    var m = (SLOT_START[state.slot] || 450) + (state.beats || 0) * 20;
+    var h = Math.floor(m / 60) % 24;
+    var mm = m % 60;
+    var suffix = h >= 12 ? 'pm' : 'am';
+    var h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    return h12 + ':' + (mm < 10 ? '0' + mm : mm) + suffix;
+  }
+
+  /* =========================================================
+     SOUND — room tone generated on the fly, no audio files
+     ========================================================= */
+  var SOUND_KEY = 'dossier.sound';
+  var audio = { ctx: null, master: null, on: false, layer: null, layerKey: null, noise: null };
+
+  var AMBIENCE = {
+    college: { freq: 240, q: 1.1, gain: 0.055, lfo: 0.55, depth: 70 },
+    court: { freq: 1100, q: 0.6, gain: 0.05, lfo: 0.22, depth: 320 },
+    mall: { freq: 560, q: 0.5, gain: 0.07, lfo: 0.14, depth: 260 },
+    library: { freq: 2600, q: 0.7, gain: 0.04, lfo: 0.1, depth: 120 },
+    walkway: { freq: 760, q: 0.6, gain: 0.06, lfo: 0.3, depth: 300 },
+    condo: { freq: 130, q: 0.9, gain: 0.05, lfo: 0.4, depth: 35 }
+  };
+
+  function soundWanted() {
+    try { return localStorage.getItem(SOUND_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  function setSoundLabel() {
+    var b = document.getElementById('soundBtn');
+    if (b) b.textContent = audio.on ? 'Sound on' : 'Sound off';
+  }
+
+  function ensureAudio() {
+    if (audio.ctx) return audio.ctx;
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    try {
+      var ctx = new Ctx();
+      var master = ctx.createGain();
+      master.gain.value = 0;
+      master.connect(ctx.destination);
+      var len = Math.floor(ctx.sampleRate * 2);
+      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      var d = buf.getChannelData(0);
+      var last = 0;
+      for (var i = 0; i < len; i++) {
+        var w = Math.random() * 2 - 1;
+        last = (last + 0.02 * w) / 1.02;
+        d[i] = last * 3.2;
+      }
+      audio.ctx = ctx;
+      audio.master = master;
+      audio.noise = buf;
+      return ctx;
+    } catch (e) {
+      audio.ctx = null;
+      return null;
+    }
+  }
+
+  function stopLayer() {
+    if (!audio.layer || !audio.ctx) return;
+    var l = audio.layer;
+    audio.layer = null;
+    audio.layerKey = null;
+    var t = audio.ctx.currentTime;
+    try {
+      l.gain.gain.cancelScheduledValues(t);
+      l.gain.gain.setValueAtTime(Math.max(0.0001, l.gain.gain.value), t);
+      l.gain.gain.linearRampToValueAtTime(0, t + 0.45);
+      l.src.stop(t + 0.55);
+      l.lfo.stop(t + 0.55);
+    } catch (e) { /* already stopped */ }
+  }
+
+  function startLayer() {
+    if (!audio.on) return;
+    var key = state.location + '|' + state.slot;
+    if (audio.layer && audio.layerKey === key) return;
+    var ctx = ensureAudio();
+    if (!ctx) return;
+    stopLayer();
+    var def = AMBIENCE[state.location] || AMBIENCE.college;
+    var damp = state.slot === 'Night' ? 0.55 : (state.slot === 'Evening' ? 0.75 : 1);
+
+    var src = ctx.createBufferSource();
+    src.buffer = audio.noise;
+    src.loop = true;
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = def.freq;
+    bp.Q.value = def.q;
+    var g = ctx.createGain();
+    g.gain.value = 0;
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(audio.master);
+
+    var lfo = ctx.createOscillator();
+    lfo.frequency.value = def.lfo;
+    var lg = ctx.createGain();
+    lg.gain.value = def.depth;
+    lfo.connect(lg);
+    lg.connect(bp.frequency);
+
+    src.start();
+    lfo.start();
+    g.gain.linearRampToValueAtTime(def.gain * damp, ctx.currentTime + 1.4);
+
+    audio.layer = { src: src, lfo: lfo, gain: g };
+    audio.layerKey = key;
+  }
+
+  function setSound(on, quiet) {
+    audio.on = !!on;
+    try { localStorage.setItem(SOUND_KEY, audio.on ? '1' : '0'); } catch (e) { /* ignore */ }
+
+    if (audio.on) {
+      var ctx = ensureAudio();
+      if (!ctx) {
+        audio.on = false;
+        setSoundLabel();
+        if (!quiet) notify('This browser will not play audio');
+        return;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      audio.master.gain.cancelScheduledValues(ctx.currentTime);
+      audio.master.gain.setValueAtTime(audio.master.gain.value, ctx.currentTime);
+      audio.master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 0.8);
+      startLayer();
+    } else if (audio.ctx) {
+      var c = audio.ctx;
+      audio.master.gain.cancelScheduledValues(c.currentTime);
+      audio.master.gain.setValueAtTime(audio.master.gain.value, c.currentTime);
+      audio.master.gain.linearRampToValueAtTime(0, c.currentTime + 0.45);
+      stopLayer();
+    }
+    setSoundLabel();
+  }
+
+  /* a page turning when a beat lands */
+  function pageTurn() {
+    if (!audio.on || !audio.ctx) return;
+    var ctx = audio.ctx;
+    var t = ctx.currentTime;
+    var src = ctx.createBufferSource();
+    src.buffer = audio.noise;
+    var hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1900;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.08, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+    src.connect(hp);
+    hp.connect(g);
+    g.connect(audio.master);
+    src.start(t, Math.random() * 0.8);
+    src.stop(t + 0.16);
+  }
+
+  /* =========================================================
+     ACTIONS
+     ========================================================= */
+  function doChoice(index) {
+    if (busy || cutting) return;
+    if ((state.beats || 0) >= BEATS_PER_SLOT) { notify('The slot is spent — advance time'); return; }
+    var t = lastTurn();
+    if (!t || !t.choices || !t.choices[index]) return;
+    var c = t.choices[index];
+    var type = String(c.type || '').toLowerCase();
+    var forced = type === 'approach' ? 'INTERACTION' : (type === 'reset' ? 'OBSERVATION' : null);
+    runTurn({ text: c.label, steer: false }, forced || state.mode, forced, { actionKind: 'choice', display: c.label });
+  }
+
+  function doSteer() {
+    if (busy || cutting) return;
+    var input = document.getElementById('steerInput');
+    var text = (input.value || '').trim();
+    if (!text) { input.focus(); return; }
+    input.value = '';
+    var forced = state.mode === 'INTERACTION' ? 'INTERACTION' : 'OBSERVATION';
+    runTurn({ text: text, steer: true }, forced, null, { actionKind: 'steer', display: 'Steer — ' + text });
+  }
+
+  async function doReroll() {
+    if (busy) return;
+    if (!state.lastRequest) { notify('Nothing to reroll — this beat has no stored payload'); return; }
+    var t = lastTurn();
+    if (!t || t.id !== state.lastRequest.turnId) { notify('Only the latest live beat can be rerolled'); return; }
+    var temp = clamp(state.temperature + 0.12, 0.5, 1.15);
+    busy = true;
+    updateDockState('Buffy is rewriting · ' + temp.toFixed(2), false);
+    try {
+      var json = await callAPI(state.lastRequest.messages, temp, currentModel());
+      state.cast = t.castSnapshot ? clone(t.castSnapshot) : state.cast;
+      state.history.pop();
+      state.inView = [];
+      commitTurn(json, {
+        action: t.actionRaw ? { text: t.actionRaw, steer: t.actionKind === 'steer' } : null,
+        actionKind: t.actionKind,
+        display: t.playerAction,
+        mode: t.mode,
+        forced: t.mode,
+        messages: state.lastRequest.messages,
+        noBeat: true
+      });
+      notify('Rerolled at ' + temp.toFixed(2));
+    } catch (err) {
+      notify(err.message || 'Reroll failed');
+    } finally {
+      busy = false;
+      renderChoices();
+      updateDockState('', false);
+    }
+  }
+
+  function travelTo(loc) {
+    if (busy || cutting || !LOCATIONS[loc] || loc === state.location) return;
+    if ((state.beats || 0) >= BEATS_PER_SLOT) { notify('The slot is spent — advance time first'); return; }
+    var nm = LOCATIONS[loc].name;
+    cutting = true;
+    sceneCut(nm, function () {
+      state.location = loc;
+      state.mode = 'OBSERVATION';
+      /* show who is actually standing there while the beat is being written,
+         so the stage is never empty on the way in */
+      state.inView = scheduleCast();
+      save();
+      renderAll();
+      cutting = false;
+      runTurn(
+        { text: 'I leave and cross to ' + nm + ', on ' + state.day + ' ' + state.slot.toLowerCase() + '.' },
+        'OBSERVATION', 'OBSERVATION',
+        { actionKind: 'travel', display: 'I walk to ' + nm + '.' }
+      );
+    });
+  }
+
+  function advanceTime() {
+    if (busy || cutting) return;
+    var si = SLOTS.indexOf(state.slot);
+    var day = state.day;
+    var slot;
+    if (si === SLOTS.length - 1) {
+      slot = SLOTS[0];
+      day = DAYS[(dayIndex() + 1) % DAYS.length];
+    } else {
+      slot = SLOTS[si + 1];
+    }
+
+    var prevDay = state.day;
+    cutting = true;
+    sceneCut(shortDay(day) + ' · ' + slot, function () {
+      state.day = day;
+      state.slot = slot;
+      state.beats = 0;
+
+      /* the campus empties on its own; anywhere else he stays put and the map decides */
+      var di = DAYS.indexOf(day);
+      if (slot === 'Morning' && di <= 4) state.location = 'college';
+      else if (slot === 'Night') state.location = 'condo';
+      else if (slot === 'Evening' && state.location === 'college') state.location = 'condo';
+
+      state.mode = 'OBSERVATION';
+      state.inView = scheduleCast();
+      save();
+      renderAll();
+      if (prevDay !== day) showDayBreak(prevDay);
+      cutting = false;
+      runTurn(
+        { text: 'It is ' + state.day + ' ' + state.slot + '. I walk into ' + LOCATIONS[state.location].name + '.' },
+        'OBSERVATION', 'OBSERVATION',
+        { actionKind: 'advance', display: 'Arrive at ' + LOCATIONS[state.location].name + ' — ' + state.day + ', ' + state.slot.toLowerCase() + '.' }
+      );
+    });
+  }
+
+  function newRun() {
+    if (!window.confirm('Start a new run? The current story and all affinity will be cleared.')) return;
+    seed();
+    renderAll();
+    scrollFeed();
+    notify('New run started');
+  }
+
+  function exportSave() {
+    var payload = clone(state);
+    payload.exportedAt = new Date().toISOString();
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'dossier-' + state.day.toLowerCase() + '-' + state.slot.toLowerCase() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    notify('Save exported');
+  }
+
+  function importSave(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(String(reader.result));
+        if (!parsed || !Array.isArray(parsed.history)) throw new Error('Not a Dossier save file.');
+        state = normalizeSave(parsed);
+        save();
+        renderAll();
+        scrollFeed();
+        notify('Save loaded');
+      } catch (e) {
+        notify('Import failed: ' + (e.message || 'bad file'));
+      }
+    };
+    reader.onerror = function () { notify('Could not read that file'); };
+    reader.readAsText(file);
+  }
+
+  /* =========================================================
+     TOAST / MODALS
+     ========================================================= */
+  var toastTimer = null;
+  function notify(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2500);
+  }
+
+  function openModal(id) {
+    var m = document.getElementById(id);
+    m.classList.add('open');
+    m.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal(id) {
+    var m = document.getElementById(id);
+    m.classList.remove('open');
+    m.setAttribute('aria-hidden', 'true');
+  }
+
+  function openSettings() {
+    document.getElementById('apiKeyInput').value = getKey();
+    var sel = document.getElementById('modelSelect');
+    sel.value = MODEL_PRESETS.indexOf(state.model) >= 0 ? state.model : MODEL_PRESETS[0];
+    document.getElementById('customModel').value = state.customModel || '';
+    document.getElementById('tempRange').value = state.temperature;
+    document.getElementById('tempVal').textContent = Number(state.temperature).toFixed(2);
+    document.getElementById('presetModelHint').textContent = 'Active: ' + currentModel();
+    openModal('settingsModal');
+    setTimeout(function () { document.getElementById('apiKeyInput').focus(); }, 30);
+  }
+
+  function saveSettings() {
+    var key = document.getElementById('apiKeyInput').value.trim();
+    try {
+      if (key) localStorage.setItem(KEY_KEY, key);
+      else localStorage.removeItem(KEY_KEY);
+    } catch (e) { notify('Could not store the key'); }
+    state.model = document.getElementById('modelSelect').value || MODEL_PRESETS[0];
+    state.customModel = document.getElementById('customModel').value.trim();
+    state.temperature = clamp(parseFloat(document.getElementById('tempRange').value) || 0.85, 0.5, 1.15);
+    save();
+    closeModal('settingsModal');
+    notify('Saved · ' + currentModel());
+  }
+
+  /* =========================================================
+     WIRING
+     ========================================================= */
+  function init() {
+    var ms = document.getElementById('modelSelect');
+    ms.innerHTML = MODEL_PRESETS.map(function (m) {
+      return '<option value="' + esc(m) + '">' + esc(m) + '</option>';
+    }).join('');
+
+    var hadSave = load();
+    if (!hadSave || !state.history.length) seed();
+
+    renderAll();
+    scrollFeed();
+
+    document.getElementById('mapGrid').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-loc]');
+      if (!b) return;
+      travelTo(b.getAttribute('data-loc'));
+    });
+    document.getElementById('placePill').addEventListener('click', function () {
+      var here = scheduledHere();
+      notify(LOCATIONS[state.location].name + ' — ' + (here.length
+        ? here.map(function (c) { return c.name.split(' ')[0]; }).join(', ')
+        : 'nobody scheduled here right now'));
+    });
+    document.getElementById('advanceBtn').addEventListener('click', advanceTime);
+    document.getElementById('exportBtn').addEventListener('click', exportSave);
+    document.getElementById('importBtn').addEventListener('click', function () {
+      document.getElementById('importFile').click();
+    });
+    document.getElementById('importFile').addEventListener('change', function (e) {
+      importSave(e.target.files && e.target.files[0]);
+      e.target.value = '';
+    });
+    document.getElementById('newRunBtn').addEventListener('click', newRun);
+    document.getElementById('settingsBtn').addEventListener('click', openSettings);
+
+    document.getElementById('choices').addEventListener('click', function (e) {
+      var b = e.target.closest('.choice');
+      if (!b) return;
+      if (b.hasAttribute('data-end')) { advanceTime(); return; }
+      doChoice(parseInt(b.getAttribute('data-i'), 10));
+    });
+    document.getElementById('steerBtn').addEventListener('click', doSteer);
+    document.getElementById('rerollBtn').addEventListener('click', doReroll);
+    document.getElementById('steerInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); doSteer(); }
+    });
+
+    document.getElementById('castOpenBtn').addEventListener('click', function () {
+      renderCast();
+      openModal('castModal');
+    });
+    document.getElementById('closeCast').addEventListener('click', function () { closeModal('castModal'); });
+    document.getElementById('castList').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cast]');
+      if (!b) return;
+      var id = b.getAttribute('data-cast');
+      openCast[id] = !openCast[id];
+      renderCast();
+    });
+
+    document.getElementById('closeDay').addEventListener('click', function () { closeModal('dayModal'); });
+    document.getElementById('dayGo').addEventListener('click', function () { closeModal('dayModal'); });
+    document.getElementById('feed').addEventListener('click', function (e) {
+      if (!e.target.closest('#earlierBtn')) return;
+      feedExpanded = !feedExpanded;
+      renderFeed();
+    });
+
+    document.getElementById('closeSettings').addEventListener('click', function () { closeModal('settingsModal'); });
+    document.getElementById('saveSettings').addEventListener('click', saveSettings);
+    document.getElementById('forgetKeyBtn').addEventListener('click', function () {
+      try { localStorage.removeItem(KEY_KEY); } catch (e) { /* ignore */ }
+      document.getElementById('apiKeyInput').value = '';
+      notify('Key forgotten');
+    });
+    document.getElementById('tempRange').addEventListener('input', function (e) {
+      document.getElementById('tempVal').textContent = Number(e.target.value).toFixed(2);
+    });
+    document.getElementById('modelSelect').addEventListener('change', function (e) {
+      document.getElementById('presetModelHint').textContent = 'Active: ' +
+        ((document.getElementById('customModel').value.trim()) || e.target.value);
+    });
+    ['settingsModal', 'castModal', 'dayModal'].forEach(function (id) {
+      var m = document.getElementById(id);
+      m.addEventListener('mousedown', function (e) { if (e.target === m) closeModal(id); });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeModal('settingsModal'); closeModal('castModal'); closeModal('dayModal'); return; }
+      if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+      if (document.querySelector('.modal.open')) return;
+      if (e.key >= '1' && e.key <= '4') {
+        e.preventDefault();
+        doChoice(parseInt(e.key, 10) - 1);
+      }
+    });
+
+    document.getElementById('soundBtn').addEventListener('click', function () {
+      var next = !audio.on;
+      setSound(next);
+      notify(next ? 'Room tone on' : 'Sound muted');
+    });
+    audio.on = soundWanted();
+    setSoundLabel();
+    document.addEventListener('pointerdown', function () {
+      if (!audio.on) return;
+      if (!audio.ctx) { setSound(true, true); return; }
+      if (audio.ctx.state === 'suspended') audio.ctx.resume();
+    }, { passive: true });
+
+    initMotes();
+    initParallax();
+
+    window.addEventListener('beforeunload', save);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
+</html>
